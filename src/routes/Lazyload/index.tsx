@@ -2,6 +2,5 @@ import { lazy } from "react";
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const  LoginPage = lazy(() => import("@/pages/Auth/LoginPage/index"));
-
-// ─── Dashboard ────────────────────────────────────────────────────────────────
-export const AgentDashboardPage = lazy(() => import("@/pages/AgentDashboardPage"));
+export const ForgotPasswordPage = lazy(() => import("@/pages/Auth/ForgetPassword/sections/ForgetPasswordForm"));
+export const  staffDasboardPage = lazy(() => import("@/pages/MainPages/staffDashboard"));

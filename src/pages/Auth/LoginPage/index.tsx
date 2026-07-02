@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box} from "@mui/material";
 import { istsIcon } from "@/assets/img";
 import LoginForm from "./sections/LoginForm";
 import ionTicket from '@/assets/icons/ion_ticket.svg'

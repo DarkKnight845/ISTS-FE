@@ -17,7 +17,7 @@ function LoginForm() {
         mt: { xs: "-50px", sm: "-30px" },
       }}
     >
-      <Typography variant="h5" sx={{ mb:3, color:"#1B1C1F",fontWeight:600}}>Log in to your account.</Typography>
+      <Typography variant="h5" sx={{ mb:3, color:"#1B1C1F",fontWeight:600, fontFamily:"inherit"}}>Log in to your account.</Typography>
       <form onSubmit={() => {}} style={{ width: "100%",}}>
         <FormControl sx={{ mb: 4, width: "450px" }}>
           <TextField
@@ -29,7 +29,7 @@ function LoginForm() {
             // error={Boolean(errors.emailOrHRTag)}
             // helperText={errors.emailOrHRTag}
             sx={{
-              fontFamily: "Poppins",
+              fontFamily: "inherit",
               fontSize: {
                 xs: "12px",
                 sm: "12px",
@@ -61,17 +61,17 @@ function LoginForm() {
         </FormControl>
 
         {/* Password */}
-        <FormControl sx={{ mb: 6, width: "450px" }}>
+        <FormControl sx={{ mb: 6, width: "450px"}}>
           <TextField
             name="password"
-            // type={showPassword ? 'text' : 'password'}
+            //type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             fullWidth
             sx={{
               borderRadius: "12px",
               color: "#082A4B99",
               border: "none",
-              fontFamily: "Poppins",
+              fontFamily: "inherit",
               backgroundColor: "#082A4B08",
               fontSize: "16px",
               fontWeight: "400",
@@ -92,6 +92,7 @@ function LoginForm() {
                 },
               },
             }}
+
             // value={formData.password}
             // onChange={handleInputChange}
             // error={Boolean(errors.password)}
@@ -112,16 +113,16 @@ function LoginForm() {
           />
 
           <Link
-            // href="#"
-            underline="none"
+            href="/forgot-password"
+            underline='hover'
             sx={{
               color: "#2559AA",
-              fontFamily: "Poppins",
+              fontFamily: "inherit",
               fontSize: {
                 xs: "10px",
                 sm: "12px",
               },
-              fontWeight: 600,
+              fontWeight: 500,
               textDecorationStyle: "solid",
               cursor: "pointer",
               mt: "12px",
@@ -140,15 +141,17 @@ function LoginForm() {
             backgroundColor: "#2559AA",
             color: "#fff",
             borderRadius: "8px",
-            fontFamily: "Poppins",
+            fontFamily: "inherit",
             fontSize: { xs: "13px", sm: "20px" },
-            fontWeight: 600,
+            fontWeight: 500,
             width: "450px",
-            padding: "3px",
+            padding: ".6rem",
+            
           }}
         >
-          log in
+          Log in 
         </CustomButton>
+
       </form>
     </Box>
   );
