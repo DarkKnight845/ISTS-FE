@@ -1,62 +1,46 @@
 import { Box, Typography, Button, TextField, Icon} from "@mui/material";
 import StatCard from "@/components/ui/Cards/StatCard";
+import DashboardHeader from "@/components/ui/DahboardHeader";
+import StaffToolbar from "@/components/ui/Toolbar";
+import RaiseTicketModal from "@/components/ui/Modals/RaiseTicketModals";
+import StaffNavbar from "@/components/ui/Nabvar/StaffNavbar";
+import StaffTable from "@/components/ui/Tables/StaffTable";
 import ticketImage from "@/assets/icons/ion_ticket_stat.svg"
 import ticketOrange from "@/assets/icons/ion_ticket_orange.svg"
 import ticketGreen from "@/assets/icons/ion_ticket_green.svg"
 import ticketRed from "@/assets/icons/ion_ticket_red.svg"
+import { useState } from "react";
+import type { Ticket } from "@/components/ui/types/ticket";
+
+
 
 function StaffDashboardPage() {
+
+    const [openModal, setOpenModal] = useState(false);
+    const [tickets, setTickets] = useState<Ticket[]>([]);
+
+    const handleCreateTicket = (ticket: Ticket) => {
+    setTickets((prev) => [...prev, ticket]);};
+
     return(
         <Box
             sx={{
                 minHeight: "100vh",
-                backgroundColor: "#F8F9FB",
-                p: 4
+                backgroundColor: "#F8F9FB", 
+                px:5               
 
             }}
         
         
         >  {/* Navbar */}
-            <Box sx={{mb:4,
-                display: "flex",
-                height:80,
-                bgcolor:"white",
-                borderRadius:2
-            }}
-                
-            >
-                
-            </Box>
+            <StaffNavbar />
 
            {/* Header */}
-            <Box sx={{mb:4,
-                height:60,
-                bgcolor:"white",
-                borderRadius:2,
-                display:"flex",
-                
-                justifyContent:"space-between",
-                alignContent:"center",
-            }}
-
-            >   {/* left-content */}
-                <Box>
-                    <Typography variant="h4">Staff Dashboard</Typography>
-                    <Typography >Manage all your tickets</Typography>
-
-                </Box>
-
-                {/* right-content */}
-                <Box>
-                    <Button variant="outlined">This Month</Button>
-                </Box>
-
-            </Box>
+            <DashboardHeader />
 
            {/* cards */}
             <Box sx={{mb:4,
                 height:160,
-                bgcolor:"white",
                 borderRadius:2,
                 display:"flex",
                 gap:3,
@@ -146,21 +130,30 @@ function StaffDashboardPage() {
 
            {/* toolbar */}
             <Box sx={{mb:4,
-                height:70,
+                p:3,
                 bgcolor:"white",
-                borderRadius:2
+                borderRadius:3,
+                border: "1px solid #EAECF0",
             }}>
-            
+                <StaffToolbar
+                onRaiseTicket={() => setOpenModal(true)}
+                />
             </Box>
 
            {/* Table */}
-            <Box sx={{mb:4,
-                height:450,
-                bgcolor:"white",
-                borderRadius:2
+            <Box sx={{mt:4
             }}>
             
+            <StaffTable tickets={tickets} />
             </Box>
+
+
+            <RaiseTicketModal
+            open={openModal}
+            onClose={() => setOpenModal(false)}
+            onSubmit={handleCreateTicket}
+            />
+
         </Box>
     );
 }
