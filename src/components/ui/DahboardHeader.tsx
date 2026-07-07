@@ -1,6 +1,6 @@
 import { Box, Button, Typography } from "@mui/material";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { CalendarIcon } from "@/components/icons";
 
 function DashboardHeader() {
   return (
@@ -19,7 +19,7 @@ function DashboardHeader() {
           variant="h4"
           sx={{
             fontWeight: 700,
-            color: "#101828",
+            color: "text.primary",
           }}
         >
           Staff Dashboard
@@ -27,7 +27,7 @@ function DashboardHeader() {
 
         <Typography
           sx={{
-            color: "#667085",
+            color: "text.secondary",
             mt: 0.5,
           }}
         >
@@ -38,21 +38,21 @@ function DashboardHeader() {
       {/* Right Section */}
       <Button
         variant="outlined"
-        startIcon={<CalendarTodayOutlinedIcon />}
+        startIcon={<CalendarIcon size={18} color="currentColor" />}
         endIcon={<KeyboardArrowDownIcon />}
         sx={{
           textTransform: "none",
-          borderColor: "#D0D5DD",
-          color: "#344054",
+          borderColor: "divider",
+          color: "text.secondary",
           borderRadius: 2,
           px: 2,
           py: 1,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "background.paper",
           fontWeight: 500,
 
           "&:hover": {
-            borderColor: "#D0D5DD",
-            backgroundColor: "#F9FAFB",
+            borderColor: "divider",
+            backgroundColor: "action.hover",
           },
         }}
       >

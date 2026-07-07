@@ -1,7 +1,47 @@
 import { CustomButton } from "@/components/ui/Buttons";
-import { Box, FormControl, Link, TextField, Typography } from "@mui/material";
+import { useAuth, getDashboardPath } from "@/context/AuthContext";
+import { loginRequest } from "@/lib/api";
+import { getRoleFromJwt } from "@/lib/jwt";
+import {
+  Box,
+  FormControl,
+  Link,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LoginForm() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await loginRequest(email, password);
+      login(result.accessToken);
+      const role = getRoleFromJwt(result.accessToken);
+      if (role) {
+        navigate(getDashboardPath(role), { replace: true });
+      } else {
+        setError("Could not determine user role from token.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -17,17 +57,17 @@ function LoginForm() {
         mt: { xs: "-50px", sm: "-30px" },
       }}
     >
-      <Typography variant="h5" sx={{ mb:3, color:"#1B1C1F",fontWeight:600, fontFamily:"inherit"}}>Log in to your account.</Typography>
-      <form onSubmit={() => {}} style={{ width: "100%",}}>
+      <Typography variant="h5" sx={{ mb: 3, color: "#1B1C1F", fontWeight: 600, fontFamily: "inherit" }}>
+        Log in to your account.
+      </Typography>
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
         <FormControl sx={{ mb: 4, width: "450px" }}>
           <TextField
             name="email"
             placeholder="Email"
             fullWidth
-            // value={formData.emailOrHRTag}
-            // onChange={handleInputChange}
-            // error={Boolean(errors.emailOrHRTag)}
-            // helperText={errors.emailOrHRTag}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             sx={{
               fontFamily: "inherit",
               fontSize: {
@@ -60,13 +100,14 @@ function LoginForm() {
           />
         </FormControl>
 
-        {/* Password */}
-        <FormControl sx={{ mb: 6, width: "450px"}}>
+        <FormControl sx={{ mb: 4, width: "450px" }}>
           <TextField
             name="password"
-            //type={showPassword ? 'text' : 'password'}
+            type="password"
             placeholder="Password"
             fullWidth
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             sx={{
               borderRadius: "12px",
               color: "#082A4B99",
@@ -92,29 +133,11 @@ function LoginForm() {
                 },
               },
             }}
-
-            // value={formData.password}
-            // onChange={handleInputChange}
-            // error={Boolean(errors.password)}
-            // helperText={errors.password}
-            // // InputProps={{
-            //   endAdornment: (
-            //     <InputAdornment position="end">
-            //       <IconButton
-            //         onClick={togglePasswordVisibility}
-            //         aria-label="toggle password visibility"
-            //         edge="end"
-            //       >
-            //         {showPassword ? <Visibility /> : <VisibilityOff />}
-            //       </IconButton>
-            //     </InputAdornment>
-            //   ),
-            // }}
           />
 
           <Link
             href="/forgot-password"
-            underline='hover'
+            underline="hover"
             sx={{
               color: "#2559AA",
               fontFamily: "inherit",
@@ -126,17 +149,32 @@ function LoginForm() {
               textDecorationStyle: "solid",
               cursor: "pointer",
               mt: "12px",
-                alignSelf:'self-end'
+              alignSelf: "self-end",
             }}
           >
             Forgot Password?
           </Link>
         </FormControl>
 
-        {/* Submit Button */}
+        {error && (
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#DC2626",
+              fontSize: "13px",
+              mb: 3,
+              textAlign: "center",
+              width: "450px",
+            }}
+          >
+            {error}
+          </Typography>
+        )}
+
         <CustomButton
           loadingPosition="end"
           type="submit"
+          loading={loading}
           sx={{
             backgroundColor: "#2559AA",
             color: "#fff",
@@ -146,12 +184,10 @@ function LoginForm() {
             fontWeight: 500,
             width: "450px",
             padding: ".6rem",
-            
           }}
         >
-          Log in 
+          Log in
         </CustomButton>
-
       </form>
     </Box>
   );

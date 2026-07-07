@@ -2,20 +2,34 @@ import {
   Box,
   Button,
   ButtonGroup,
-  IconButton,
   TextField,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
-import TuneIcon from "@mui/icons-material/Tune";
 import AddIcon from "@mui/icons-material/Add";
 
 type StaffToolbarProps = {
+  activeFilter: StaffFilter;
+  onFilterChange: (filter: StaffFilter) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
   onRaiseTicket: () => void;
 };
 
-function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
+export type StaffFilter = "All" | "Ongoing" | "Waiting" | "Completed";
+
+const FILTERS: StaffFilter[] = ["All", "Ongoing", "Waiting", "Completed"];
+
+function StaffToolbar({
+  activeFilter,
+  onFilterChange,
+  search,
+  onSearchChange,
+  onRaiseTicket,
+}: StaffToolbarProps) {
+  const theme = useTheme();
   return (
     <Box
       sx={{
@@ -29,13 +43,13 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
       <ButtonGroup
         variant="text"
         sx={{
-          bgcolor: "#F8F9FB",
+          bgcolor: theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[100],
           borderRadius: "10px",
           overflow: "hidden",
 
           "& .MuiButton-root": {
             textTransform: "none",
-            color: "#344054",
+            color: "text.secondary",
             fontWeight: 500,
             px: 3,
             py: 1.2,
@@ -43,23 +57,26 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
           },
         }}
       >
-        <Button
-          sx={{
-            bgcolor: "#FFFFFF",
-            fontWeight: 600,
-            "&:hover": {
-              bgcolor: "#FFFFFF",
-            },
-          }}
-        >
-          All
-        </Button>
-
-        <Button>Ongoing</Button>
-
-        <Button>Waiting</Button>
-
-        <Button>Completed</Button>
+        {FILTERS.map((filter) => {
+          const selected = activeFilter === filter;
+          return (
+            <Button
+              key={filter}
+              onClick={() => onFilterChange(filter)}
+              sx={{
+                bgcolor: selected ? "background.paper" : "transparent",
+                color: selected ? "text.primary" : "text.secondary",
+                fontWeight: selected ? 600 : 500,
+                boxShadow: selected ? theme.shadows[1] : "none",
+                "&:hover": {
+                  bgcolor: selected ? "background.paper" : theme.palette.action.hover,
+                },
+              }}
+            >
+              {filter}
+            </Button>
+          );
+        })}
       </ButtonGroup>
 
       {/* Right Section */}
@@ -74,12 +91,14 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
         <TextField
           size="small"
           placeholder="Search tickets..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
           sx={{
             width: 260,
 
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: "background.paper",
               height: 42,
             },
           }}
@@ -87,24 +106,12 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "#98A2B3" }} />
+                  <SearchIcon sx={{ color: "text.disabled" }} />
                 </InputAdornment>
               ),
             },
           }}
         />
-
-        {/* Filter */}
-        <IconButton
-          sx={{
-            width: 42,
-            height: 42,
-            border: "1px solid #D0D5DD",
-            borderRadius: 2,
-          }}
-        >
-          <TuneIcon />
-        </IconButton>
 
         {/* Raise Ticket */}
         <Button
@@ -112,7 +119,7 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
           startIcon={<AddIcon />}
           onClick={onRaiseTicket}
           sx={{
-            bgcolor: "#2859B8",
+            bgcolor: "primary.main",
             textTransform: "none",
             px: 3,
             height: 42,
@@ -120,7 +127,7 @@ function StaffToolbar({ onRaiseTicket }: StaffToolbarProps) {
             boxShadow: "none",
 
             "&:hover": {
-              bgcolor: "#214A99",
+              bgcolor: "primary.dark",
               boxShadow: "none",
             },
           }}

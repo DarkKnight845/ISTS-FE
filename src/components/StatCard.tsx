@@ -1,4 +1,5 @@
 import { Box, Card, Typography } from '@mui/material';
+import { TrendUpIcon, TrendDownIcon } from '@/components/icons';
 
 interface StatCardProps {
   title: string;
@@ -10,15 +11,6 @@ interface StatCardProps {
   iconBg: string;
 }
 
-const TrendArrow = ({ up }: { up: boolean }) => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-    <path
-      d={up ? 'M12 4L4 14H20L12 4Z' : 'M12 20L20 10H4L12 20Z'}
-      fill={up ? '#16A34A' : '#DC2626'}
-    />
-  </svg>
-);
-
 /**
  * KPI stat card matching the dashboard design.
  */
@@ -28,7 +20,8 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
       sx={{
         width: '100%',
         borderRadius: '16px',
-        border: '1px solid #E5E7EB',
+        border: '1px solid',
+        borderColor: 'divider',
         boxShadow: 'none',
         p: '24px',
         display: 'flex',
@@ -36,10 +29,11 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
         justifyContent: 'space-between',
         height: '100%',
         boxSizing: 'border-box',
+        backgroundColor: 'background.paper',
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 6 }}>
-        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500, fontSize: '14px' }}>
+        <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, fontSize: '14px' }}>
           {title}
         </Typography>
         <Box
@@ -59,14 +53,14 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
       </Box>
 
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: '#111827', fontSize: '32px', lineHeight: 1.2 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '32px', lineHeight: 1.2 }}>
           {value}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mt: '8px' }}>
-          <TrendArrow up={trendUp} />
+          {trendUp ? <TrendUpIcon size={12} color="success.main" /> : <TrendDownIcon size={12} color="error.main" />}
           <Typography
             variant="caption"
-            sx={{ color: trendUp ? '#16A34A' : '#DC2626', fontWeight: 500, fontSize: '12px' }}
+            sx={{ color: trendUp ? 'success.main' : 'error.main', fontWeight: 500, fontSize: '12px' }}
           >
             {trend}
           </Typography>

@@ -4,19 +4,24 @@ import {
   Typography,
   IconButton,
   Button,
+  CircularProgress,
+  useTheme,
 } from "@mui/material";
 
-import CloseIcon from "@mui/icons-material/Close";
+import { useState } from "react";
+
+import { CloseIcon } from "@/components/icons";
 
 import { keyframes } from "@mui/system";
-import  {type  Ticket } from "@/components/ui/types/ticket";
 
-import RaiseTicketForm from "@/components/ui/Modals/RaiseTicketForm";
+import RaiseTicketForm, {
+  type TicketFormData,
+} from "@/components/ui/Modals/RaiseTicketForm";
 
 type RaiseTicketModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (ticket: Ticket) => void
+  onSubmit: (data: TicketFormData) => Promise<void> | void;
 };
 
 const slideIn = keyframes`
@@ -33,10 +38,20 @@ to{
 function RaiseTicketModal({
   open,
   onClose,
-  onSubmit
-}: RaiseTicketModalProps) 
+  onSubmit,
+}: RaiseTicketModalProps) {
+  const [submitting, setSubmitting] = useState(false);
+  const theme = useTheme();
 
-{
+  const handleSubmit = async (data: TicketFormData) => {
+    setSubmitting(true);
+    try {
+      await onSubmit(data);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -53,7 +68,7 @@ function RaiseTicketModal({
 
           width: 760,
 
-          bgcolor: "#FFFFFF",
+          bgcolor: "background.paper",
 
           borderRadius: 5,
 
@@ -81,7 +96,7 @@ function RaiseTicketModal({
 
             alignItems: "flex-start",
 
-            borderBottom: "1px solid #EAECF0",
+            borderBottom: `1px solid ${theme.palette.divider}`,
           }}
         >
           <Box>
@@ -98,7 +113,7 @@ function RaiseTicketModal({
             <Typography
               sx={{
                 mt: 1,
-                color: "#667085",
+                color: "text.secondary",
                 fontFamily: "General sans",
               }}
             >
@@ -107,8 +122,8 @@ function RaiseTicketModal({
             </Typography>
           </Box>
 
-          <IconButton onClick={onClose}>
-            <CloseIcon />
+          <IconButton onClick={onClose} disabled={submitting} sx={{ color: 'text.secondary' }}>
+            <CloseIcon size={22} />
           </IconButton>
         </Box>
 
@@ -125,9 +140,7 @@ function RaiseTicketModal({
             py: 4,
           }}
         >
-          <RaiseTicketForm 
-          onSubmit={onSubmit}
-          />
+          <RaiseTicketForm onSubmit={handleSubmit} />
         </Box>
 
         {/* FOOTER */}
@@ -137,7 +150,7 @@ function RaiseTicketModal({
             px: 4,
             py: 3,
 
-            borderTop: "1px solid #EAECF0",
+            borderTop: `1px solid ${theme.palette.divider}`,
 
             display: "flex",
 
@@ -149,10 +162,11 @@ function RaiseTicketModal({
           <Button
             variant="text"
             onClick={onClose}
+            disabled={submitting}
             sx={{
               textTransform: "none",
 
-              color: "#344054",
+              color: "text.secondary",
 
               fontWeight: 600,
               fontFamily: "General sans",
@@ -162,13 +176,21 @@ function RaiseTicketModal({
           </Button>
 
           <Button
+            type="submit"
+            form="raise-ticket-form"
             variant="contained"
+            disabled={submitting}
+            startIcon={
+              submitting ? (
+                <CircularProgress size={16} sx={{ color: "inherit" }} />
+              ) : undefined
+            }
             sx={{
               textTransform: "none",
 
               px: 4,
 
-              bgcolor: "#2859B8",
+              bgcolor: "primary.main",
 
               borderRadius: 2,
 
@@ -176,12 +198,12 @@ function RaiseTicketModal({
               fontFamily: "General sans",
 
               "&:hover": {
-                bgcolor: "#214A99",
+                bgcolor: "primary.dark",
                 boxShadow: "none",
               },
             }}
           >
-            Submit
+            {submitting ? "Submitting..." : "Submit"}
           </Button>
         </Box>
       </Box>

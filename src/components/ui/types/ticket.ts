@@ -1,10 +1,17 @@
+export type TicketStatus = "Open" | "InProgress" | "Resolved" | "Closed" | "Waiting";
+export type TicketPriority = "Low" | "Medium" | "High" | "Critical" | "Urgent";
+
 export type Ticket = {
-  id: number;
+  id: string;
+  backendId: string;
   subject: string;
   department: string;
   category: string;
   description: string;
-  priority: "Low" | "Medium" | "High" | "Urgent";
-  status: "Waiting";
+  priority: TicketPriority;
+  status: TicketStatus;
+  requester: string;
+  assigned: string | null;
   createdAt: string;
+  updatedAt: string;
 };

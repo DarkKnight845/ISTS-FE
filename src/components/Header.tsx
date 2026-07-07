@@ -1,19 +1,36 @@
-import { Box, IconButton, Avatar, Chip, Typography } from '@mui/material';
-
-const BellIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18.5 16V11C18.5 7.93 16.86 5.36 14 4.68V4C14 3.17 13.33 2.5 12.5 2.5C11.67 2.5 11 3.17 11 4V4.68C8.14 5.36 6.5 7.92 6.5 11V16L4 18.5V19.5H21V18.5L18.5 16Z"
-      fill="#64748B"
-    />
-  </svg>
-);
+import { useState } from 'react';
+import { Box, IconButton, Avatar, Chip, Typography, Badge, Menu, MenuItem, CircularProgress } from '@mui/material';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useNotifications } from '@/hooks/useNotifications';
+import { BellIcon } from '@/components/icons';
 
 /**
- * Global top bar with profile, department badge, and notifications only.
- * The page title and date picker live in the main content area.
+ * Global top bar with profile, department badge, and notifications dropdown.
  */
 function Header() {
+  const { user } = useCurrentUser();
+  const { notifications, unreadCount, loading, markAsRead } = useNotifications();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const initials = user
+    ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
+    : 'A';
+
+  const displayName = user?.fullName || 'Agent';
+  const department = user?.departmentName || 'IT Department';
+
+  const handleOpen = (e: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMarkRead = async (id: string) => {
+    await markAsRead(id);
+  };
+
   return (
     <Box
       sx={{
@@ -22,17 +39,18 @@ function Header() {
         alignItems: 'center',
         px: 4,
         py: 2,
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #E5E7EB',
+        backgroundColor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
         minHeight: 72,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Chip
-          label="IT Department"
+          label={department}
           sx={{
-            backgroundColor: '#2559AA',
-            color: '#fff',
+            backgroundColor: 'primary.main',
+            color: 'primary.contrastText',
             fontWeight: 500,
             fontSize: 12,
             borderRadius: '20px',
@@ -40,9 +58,98 @@ function Header() {
           }}
         />
 
-        <IconButton sx={{ border: '1px solid #E5E7EB', borderRadius: '10px' }}>
-          <BellIcon />
+        <IconButton
+          onClick={handleOpen}
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '10px', color: 'text.secondary' }}
+        >
+          <Badge badgeContent={unreadCount} color="error" overlap="circular">
+            <BellIcon size={20} />
+          </Badge>
         </IconButton>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+          slotProps={{
+            paper: {
+              sx: {
+                width: 360,
+                maxHeight: 420,
+                borderRadius: '12px',
+                mt: 1,
+                backgroundColor: 'background.paper',
+              },
+            },
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography sx={{ fontWeight: 600, fontSize: 14, color: 'text.primary' }}>
+              Notifications
+            </Typography>
+          </Box>
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={20} sx={{ color: 'primary.main' }} />
+            </Box>
+          ) : !notifications?.length ? (
+            <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
+              <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
+                No notifications yet.
+              </Typography>
+            </Box>
+          ) : (
+            notifications.map((n) => (
+              <MenuItem
+                key={n.id}
+                onClick={() => {
+                  if (!n.isRead) handleMarkRead(n.id);
+                  handleClose();
+                }}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: n.isRead ? 'transparent' : 'action.hover',
+                  whiteSpace: 'normal',
+                }}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                    <Typography
+                      sx={{
+                        fontWeight: n.isRead ? 500 : 600,
+                        fontSize: 13,
+                        color: 'text.primary',
+                      }}
+                    >
+                      {n.title}
+                    </Typography>
+                    {!n.isRead && (
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: 'primary.main',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                  </Box>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 0.5 }}>
+                    {n.message}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
+                    {new Date(n.createdAt).toLocaleString()}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))
+          )}
+        </Menu>
 
         <Box
           sx={{
@@ -52,14 +159,17 @@ function Header() {
             pl: 1,
             pr: 1.5,
             py: 0.5,
-            border: '1px solid #E5E7EB',
+            border: '1px solid',
+            borderColor: 'divider',
             borderRadius: '24px',
-            backgroundColor: '#fff',
+            backgroundColor: 'background.paper',
           }}
         >
-          <Avatar sx={{ width: 28, height: 28, fontSize: 12, backgroundColor: '#F59E0B' }}>A</Avatar>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: '#374151' }}>
-            Agent
+          <Avatar sx={{ width: 28, height: 28, fontSize: 12, backgroundColor: 'warning.main' }}>
+            {initials}
+          </Avatar>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+            {displayName}
           </Typography>
         </Box>
       </Box>

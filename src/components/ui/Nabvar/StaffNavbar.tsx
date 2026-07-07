@@ -1,24 +1,32 @@
 import {
   Avatar,
-  Badge,
   Box,
-  IconButton,
   Typography,
 } from "@mui/material";
 import logo from "@/assets/icons/dash-logo.svg";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import NotificationBell from "@/components/NotificationBell";
 
 function StaffNavbar() {
+  const { user } = useCurrentUser();
+
+  const initials = user
+    ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
+    : 'E';
+
+  const displayName = user?.fullName || 'Eniafe Bada';
+  const roleLabel = user?.roles?.[0] || 'Staff';
+
   return (
     <Box
       sx={{
         height: 100,
-        bgcolor: "#FFFFFF",
-        border: "1px solid #EAECF0",
-        borderRadius: 3,
-        px:5,
+        bgcolor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        px: 5,
         mb: 4,
-        mx:-6,
 
         display: "flex",
         justifyContent: "space-between",
@@ -45,14 +53,7 @@ function StaffNavbar() {
         }}
       >
         {/* Notification */}
-        <IconButton>
-          <Badge
-            badgeContent={3}
-            color="error"
-          >
-            <NotificationsNoneOutlinedIcon />
-          </Badge>
-        </IconButton>
+        <NotificationBell icon={<NotificationsNoneOutlinedIcon />} />
 
         {/* User */}
         <Box
@@ -68,7 +69,7 @@ function StaffNavbar() {
               height: 40,
             }}
           >
-            E
+            {initials}
           </Avatar>
 
           <Box>
@@ -78,16 +79,16 @@ function StaffNavbar() {
                 fontSize: 14,
               }}
             >
-              Eniafe Bada
+              {displayName}
             </Typography>
 
             <Typography
               sx={{
-                color: "#667085",
+                color: "text.secondary",
                 fontSize: 12,
               }}
             >
-              Staff
+              {roleLabel}
             </Typography>
           </Box>
         </Box>

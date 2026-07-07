@@ -72,9 +72,7 @@ const ActionButton: React.FC<ActionButton> = ({
     <>
       {icon ? (
         <CustomIconButton
-          onClick={
-            !disabled ? onClick : () => console.log('remove from disabled')
-          }
+          onClick={!disabled ? onClick : undefined}
           sx={buttonStyle}
           tooltip={
             disabled

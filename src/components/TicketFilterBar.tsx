@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Box, Button, InputBase, Paper } from '@mui/material';
+import { Box, Button, InputBase, Paper, useTheme } from '@mui/material';
 
 const SearchIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <circle cx="11" cy="11" r="8" stroke="#6B7280" strokeWidth="1.5" fill="none" />
-    <path d="M21 21L16.65 16.65" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
 const FilterIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M4 5H20" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M4 12H20" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M4 19H20" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
-    <circle cx="9" cy="5" r="2" fill="#6B7280" />
-    <circle cx="15" cy="12" r="2" fill="#6B7280" />
-    <circle cx="9" cy="19" r="2" fill="#6B7280" />
+    <path d="M4 5H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M4 12H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M4 19H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="9" cy="5" r="2" fill="currentColor" />
+    <circle cx="15" cy="12" r="2" fill="currentColor" />
+    <circle cx="9" cy="19" r="2" fill="currentColor" />
   </svg>
 );
 
@@ -31,6 +31,7 @@ interface TicketFilterBarProps {
  */
 function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
   const [search, setSearch] = useState('');
+  const theme = useTheme();
 
   return (
     <Box
@@ -42,7 +43,7 @@ function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
         gap: 2,
       }}
     >
-      <Box sx={{ display: 'flex', gap: 1, backgroundColor: '#F3F4F6', borderRadius: '10px', p: 0.5 }}>
+      <Box sx={{ display: 'flex', gap: 1, backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100], borderRadius: '10px', p: 0.5 }}>
         {(['All', 'Mine', 'Unassigned'] as FilterTab[]).map((tab) => (
           <Button
             key={tab}
@@ -54,10 +55,10 @@ function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
               textTransform: 'none',
               fontSize: 13,
               fontWeight: 500,
-              color: activeTab === tab ? '#111827' : '#6B7280',
-              backgroundColor: activeTab === tab ? '#fff' : 'transparent',
-              boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              '&:hover': { backgroundColor: activeTab === tab ? '#fff' : 'rgba(255,255,255,0.6)' },
+              color: activeTab === tab ? 'text.primary' : 'text.secondary',
+              backgroundColor: activeTab === tab ? 'background.paper' : 'transparent',
+              boxShadow: activeTab === tab ? theme.shadows[1] : 'none',
+              '&:hover': { backgroundColor: activeTab === tab ? 'background.paper' : theme.palette.action.hover },
             }}
           >
             {tab}
@@ -72,9 +73,10 @@ function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
             alignItems: 'center',
             px: 1.5,
             py: 0.5,
-            border: '1px solid #E5E7EB',
+            border: `1px solid ${theme.palette.divider}`,
             borderRadius: '10px',
             boxShadow: 'none',
+            bgcolor: 'background.paper',
             minWidth: 240,
           }}
         >
@@ -92,12 +94,12 @@ function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
           startIcon={<FilterIcon />}
           sx={{
             textTransform: 'none',
-            color: '#374151',
-            borderColor: '#E5E7EB',
+            color: 'text.secondary',
+            borderColor: theme.palette.divider,
             borderRadius: '10px',
             fontSize: 13,
             fontWeight: 500,
-            '&:hover': { borderColor: '#D1D5DB', backgroundColor: '#F9FAFB' },
+            '&:hover': { borderColor: theme.palette.divider, backgroundColor: theme.palette.action.hover },
           }}
         >
           Filter
