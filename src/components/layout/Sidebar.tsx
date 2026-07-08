@@ -41,6 +41,16 @@ function Sidebar() {
   const navItems = getNavItems(role);
 
   return (
+
+    <>
+      <Box
+        sx={{
+          width: 260,
+          flexShrink: 0,
+        }}
+      />
+
+
     <Box
       sx={{
         width: 260,
@@ -51,6 +61,11 @@ function Sidebar() {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        overflowY: 'auto',
+        margionRight: 2,
       }}
     >
       <Box sx={{ mb: 4, px: 1 }}>
@@ -122,6 +137,7 @@ function Sidebar() {
         </IconButton>
       </Box>
     </Box>
+    </> 
   );
 }
 

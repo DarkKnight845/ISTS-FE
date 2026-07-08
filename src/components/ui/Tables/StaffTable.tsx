@@ -31,10 +31,13 @@ const statusStyles: Record<TicketStatus, { bg: string; color: string; border: st
   Closed: { bg: '#E5E7EB', color: '#374151', border: '#D1D5DB' },
   Waiting: { bg: '#D7EBFF', color: '#1565C0', border: '#1565C0' },
 };
-
+const formatTicketId = (id: string | number): string => {
+  return `TKT-${String(id).slice(0, 5)}`;
+};
 
 function StaffTable({ tickets, onRowClick }: StaffTableProps) {
   const theme = useTheme();
+
   return (
     <TableContainer
       component={Paper}
@@ -170,7 +173,7 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
                       cursor: "pointer",
                     }}
                   >
-                    {ticket.id}
+                    {formatTicketId(ticket.id)}
                   </Typography>
                 </TableCell>
 
