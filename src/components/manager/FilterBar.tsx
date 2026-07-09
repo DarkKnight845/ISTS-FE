@@ -11,6 +11,7 @@ interface FilterBarProps {
   onPriorityChange: (value: string) => void;
   assignedTo: string;
   onAssignedChange: (value: string) => void;
+  assignedOptions?: string[];
   onClear: () => void;
 }
 
@@ -40,6 +41,7 @@ function FilterBar({
   onPriorityChange,
   assignedTo,
   onAssignedChange,
+  assignedOptions = [],
   onClear,
 }: FilterBarProps) {
   const theme = useTheme();
@@ -127,8 +129,11 @@ function FilterBar({
           </Typography>
           <Select value={assignedTo} onChange={(e: SelectChangeEvent) => onAssignedChange(e.target.value)} sx={selectSx}>
             <MenuItem value="All">All</MenuItem>
-            <MenuItem value="Chisom Mabuchi">Chisom Mabuchi</MenuItem>
-            <MenuItem value="Moji Akande">Moji Akande</MenuItem>
+            {assignedOptions.map((name) => (
+              <MenuItem key={name} value={name}>
+                {name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 

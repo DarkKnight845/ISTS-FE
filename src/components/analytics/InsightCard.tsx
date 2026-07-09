@@ -23,6 +23,12 @@ function InsightCard({ insight }: InsightCardProps) {
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100%',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        cursor: 'default',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: theme.shadows[2],
+        },
       }}
     >
       <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px', fontWeight: 500 }}>

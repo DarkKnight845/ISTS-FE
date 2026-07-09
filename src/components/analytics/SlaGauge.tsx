@@ -4,9 +4,10 @@ interface SlaGaugeProps {
   value: number;
   title: string;
   subtitle?: string;
+  caption?: string;
 }
 
-function SlaGauge({ value, title, subtitle }: SlaGaugeProps) {
+function SlaGauge({ value, title, subtitle, caption }: SlaGaugeProps) {
   const theme = useTheme();
   const radius = 70;
   const strokeWidth = 14;
@@ -20,6 +21,13 @@ function SlaGauge({ value, title, subtitle }: SlaGaugeProps) {
   };
 
   const color = getColor(value);
+
+  const defaultCaption =
+    value >= 90
+      ? 'Great job! SLA targets are being met.'
+      : value >= 75
+      ? 'Fair. Some tickets need attention.'
+      : 'Attention needed. Several tickets breached SLA.';
 
   return (
     <Box
@@ -84,7 +92,7 @@ function SlaGauge({ value, title, subtitle }: SlaGaugeProps) {
       </Box>
 
       <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px' }}>
-        {value >= 90 ? 'Great job! SLA targets are being met.' : value >= 75 ? 'Fair. 3 tickets need attention.' : 'Attention needed. 4 tickets breached SLA.'}
+        {caption ?? defaultCaption}
       </Typography>
     </Box>
   );

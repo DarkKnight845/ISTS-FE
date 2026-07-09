@@ -137,7 +137,7 @@ function StaffDashboardPage() {
           <StatCard
             title="Submitted"
             value={stats.submitted}
-            caption="Tickets you have raised"
+            caption={`${stats.submitted} ticket${stats.submitted === 1 ? "" : "s"} you have raised`}
             icon={
               <Box
                 sx={{
@@ -154,7 +154,7 @@ function StaffDashboardPage() {
           <StatCard
             title="In Progress"
             value={stats.inProgress}
-            caption="Tickets being worked on"
+            caption={`${stats.inProgress} ticket${stats.inProgress === 1 ? "" : "s"} being worked on`}
             icon={
               <Box
                 sx={{
@@ -171,7 +171,7 @@ function StaffDashboardPage() {
           <StatCard
             title="Waiting on you"
             value={stats.waiting}
-            caption="Tickets awaiting action"
+            caption={`${stats.waiting} ticket${stats.waiting === 1 ? "" : "s"} awaiting action`}
             icon={
               <Box
                 sx={{
@@ -188,7 +188,7 @@ function StaffDashboardPage() {
           <StatCard
             title="Resolved"
             value={stats.resolved}
-            caption="Tickets resolved"
+            caption={`${stats.resolved} ticket${stats.resolved === 1 ? "" : "s"} resolved`}
             icon={
               <Box
                 sx={{
@@ -265,10 +265,18 @@ function StaffDashboardPage() {
         connection={connection}
         canAccept={false}
         currentUserId={currentUserId}
+        onTicketUpdated={(updated) => {
+          setSelectedTicket(updated);
+          setTickets((prev) =>
+            prev.map((t) => (t.backendId === updated.backendId ? updated : t))
+          );
+        }}
       />
     </Box>
   );
 }
+
+
 
 function mapBackendTicket(ticket: TicketResponseDto): Ticket {
   const statusMap: Record<string, TicketStatus> = {
@@ -293,12 +301,16 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     department: ticket.departmentName || "—",
     category: ticket.categoryName || "—",
     description: ticket.description,
+    attachmentUrl: ticket.attachmentUrl || null,
     priority: (ticket.priority as Ticket["priority"]) || "Medium",
     status: statusMap[ticket.status] || "Waiting",
     requester: ticket.createdByName || "You",
+    requesterId: ticket.createdById,
     assigned: ticket.assignedAgentName || null,
     createdAt: formatDate(ticket.createdAt),
+    createdAtDate: ticket.createdAt,
     updatedAt: formatDate(ticket.updatedAt),
+    isRated: ticket.isRated,
   };
 }
 

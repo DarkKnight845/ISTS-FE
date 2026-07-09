@@ -34,6 +34,11 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
         height: '100%',
         boxSizing: 'border-box',
         backgroundColor: 'background.paper',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        },
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 6 }}>
@@ -71,22 +76,74 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
   );
 }
 
-const cards = [
-  { title: 'Total open tickets', value: 34, trend: '12% from last month', trendUp: true, icon: <TicketSubmittedIcon size={20} />, iconBg: '#2559AA' },
-  { title: 'Resolved', value: 21, trend: '12% from last month', trendUp: false, icon: <TicketResolvedIcon size={20} />, iconBg: '#86EFAC' },
-  { title: 'Unassigned', value: 5, trend: '12% from last month', trendUp: true, icon: <TicketUrgentIcon size={20} />, iconBg: '#DBEAFE' },
-  { title: 'SLA breaches', value: 4, trend: '12% from last month', trendUp: true, icon: <SlaBreachIcon color="#DC2626" />, iconBg: '#FECACA' },
-  { title: 'SLA Compliance', value: '78%', trend: '12% from last month', trendUp: false, icon: <SlaComplianceIcon color="#2559AA" />, iconBg: '#DBEAFE' },
-];
+interface StatsGridProps {
+  openTickets: number;
+  resolved: number;
+  unassigned: number;
+  slaBreaches: number;
+  slaCompliance: number;
+  onSlaClick: () => void;
+}
 
-function StatsGrid({ onSlaClick }: { onSlaClick: () => void }) {
+function StatsGrid({
+  openTickets,
+  resolved,
+  unassigned,
+  slaBreaches,
+  slaCompliance,
+  onSlaClick,
+}: StatsGridProps) {
+  const cards = [
+    {
+      title: 'Total open tickets',
+      value: openTickets,
+      trend: 'Currently active',
+      trendUp: true,
+      icon: <TicketSubmittedIcon size={20} />,
+      iconBg: '#2559AA',
+    },
+    {
+      title: 'Resolved',
+      value: resolved,
+      trend: 'Completed tickets',
+      trendUp: true,
+      icon: <TicketResolvedIcon size={20} />,
+      iconBg: '#86EFAC',
+    },
+    {
+      title: 'Unassigned',
+      value: unassigned,
+      trend: 'Awaiting assignment',
+      trendUp: unassigned === 0,
+      icon: <TicketUrgentIcon size={20} />,
+      iconBg: '#DBEAFE',
+    },
+    {
+      title: 'SLA breaches',
+      value: slaBreaches,
+      trend: slaBreaches === 0 ? 'No tickets past SLA' : `${slaBreaches} ticket${slaBreaches === 1 ? '' : 's'} past SLA`,
+      trendUp: slaBreaches === 0,
+      icon: <SlaBreachIcon color="#DC2626" />,
+      iconBg: '#FECACA',
+      onClick: onSlaClick,
+    },
+    {
+      title: 'SLA Compliance',
+      value: `${slaCompliance}%`,
+      trend: `${slaCompliance}% of SLA-tracked tickets resolved on time`,
+      trendUp: slaCompliance >= 80,
+      icon: <SlaComplianceIcon color="#2559AA" />,
+      iconBg: '#DBEAFE',
+    },
+  ];
+
   return (
     <div className="stats-grid-5">
       {cards.map((card) => (
         <Box
           key={card.title}
-          onClick={card.title === 'SLA breaches' ? onSlaClick : undefined}
-          sx={card.title === 'SLA breaches' ? { cursor: 'pointer' } : undefined}
+          onClick={card.onClick}
+          sx={card.onClick ? { cursor: 'pointer' } : undefined}
         >
           <StatCard {...card} />
         </Box>

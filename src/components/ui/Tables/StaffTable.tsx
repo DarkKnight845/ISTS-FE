@@ -30,10 +30,10 @@ const statusStyles: Record<TicketStatus, { bg: string; color: string; border: st
   Resolved: { bg: '#D1FAE5', color: '#047857', border: '#6EE7B7' },
   Closed: { bg: '#E5E7EB', color: '#374151', border: '#D1D5DB' },
   Waiting: { bg: '#D7EBFF', color: '#1565C0', border: '#1565C0' },
+  Active: { bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
+  Ongoing: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
 };
-const formatTicketId = (id: string | number): string => {
-  return `TKT-${String(id).slice(0, 5)}`;
-};
+const formatTicketId = (id: string): string => `TKT-${id.slice(0, 3).toUpperCase()}`;
 
 function StaffTable({ tickets, onRowClick }: StaffTableProps) {
   const theme = useTheme();

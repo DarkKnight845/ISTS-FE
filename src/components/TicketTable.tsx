@@ -12,7 +12,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import type { Ticket, TicketPriority, TicketStatus } from '../data/mockTickets';
+import type { Ticket, TicketPriority, TicketStatus } from '@/components/ui/types/ticket';
 import { MoreIcon } from './icons';
 
 const SortIcon = () => (
@@ -107,7 +107,7 @@ function TicketTable({ tickets, onSelect }: TicketTableProps) {
               >
                 <TableCell sx={{ ...cellSx, width: '30%' }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                    {ticket.id}
+                    TKT-{ticket.id.slice(0, 3).toUpperCase()}
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                     {ticket.subject}

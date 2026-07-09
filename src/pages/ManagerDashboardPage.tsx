@@ -8,15 +8,27 @@ import TicketDetailDrawer from '@/components/manager/TicketDetailDrawer';
 import ReassignModal from '@/components/manager/ReassignModal';
 import ReassignSuccessModal from '@/components/manager/ReassignSuccessModal';
 import SlaBreachesModal from '@/components/manager/SlaBreachesModal';
+import DateRangeFilter from '@/components/DateRangeFilter';
 import { type ManagerTicket } from '@/data/mockManagerTickets';
 import { useTickets, type BackendTicket } from '@/hooks/useTickets';
-import { getAgentsRequest, assignTicketRequest, type AgentDto } from '@/lib/api';
-
-import { CalendarIcon } from '@/components/icons';
+import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
+import { getAgentsRequest, assignTicketRequest, getBreachedTicketsRequest, type AgentDto, type TicketResponseDto } from '@/lib/api';
 
 function ManagerDashboardPage() {
-  const { tickets: backendTickets, loading: ticketsLoading, error: ticketsError, refetch } = useTickets();
-  const [tickets, setTickets] = useState<ManagerTicket[]>([]);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const filters = useMemo(
+    () => ({
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
+    }),
+    [fromDate, toDate]
+  );
+
+  const { tickets: backendTickets, loading: ticketsLoading, error: ticketsError, refetch } = useTickets(filters);
+  const { analytics } = useTicketAnalytics();
+
+  const [breachedTickets, setBreachedTickets] = useState<ManagerTicket[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [priority, setPriority] = useState('All');
@@ -35,47 +47,57 @@ function ManagerDashboardPage() {
   const [agentsLoading, setAgentsLoading] = useState(false);
   const [agentsError, setAgentsError] = useState<string | null>(null);
   const [reassignLoading, setReassignLoading] = useState(false);
+  const [breachError, setBreachError] = useState<string | null>(null);
+
+  const tickets = useMemo(() => backendTickets?.map(mapBackendTicket) ?? [], [backendTickets]);
 
   useEffect(() => {
-    if (backendTickets) {
-      setTickets(backendTickets.map(mapBackendTicket));
-    }
-  }, [backendTickets]);
-
-  useEffect(() => {
-    if (!reassignOpen) {
-      setAgents([]);
-      setAgentsError(null);
-      return;
-    }
-
     let cancelled = false;
-    setAgentsLoading(true);
-    setAgentsError(null);
-
-    getAgentsRequest()
+    getBreachedTicketsRequest()
       .then((data) => {
-        if (!cancelled) setAgents(data);
+        if (!cancelled) setBreachedTickets(data.map(mapBackendTicket));
       })
       .catch((err) => {
-        if (!cancelled) setAgentsError(err instanceof Error ? err.message : 'Failed to load agents');
-      })
-      .finally(() => {
-        if (!cancelled) setAgentsLoading(false);
+        if (!cancelled) {
+          setBreachError(err instanceof Error ? err.message : 'Failed to load SLA breaches');
+        }
       });
-
     return () => {
       cancelled = true;
     };
-  }, [reassignOpen]);
+  }, []);
+
+  const assignedOptions = useMemo(() => {
+    const names = new Set<string>();
+    tickets.forEach((t) => {
+      if (t.assigned) names.add(t.assigned);
+    });
+    return Array.from(names).sort();
+  }, [tickets]);
+
+  const stats = useMemo(() => {
+    const openTickets = tickets.filter(
+      (t) => t.status === 'Active' || t.status === 'Ongoing'
+    ).length;
+    const resolved = tickets.filter((t) => t.status === 'Resolved').length;
+    const unassigned = tickets.filter(
+      (t) => !t.assigned && t.status !== 'Resolved'
+    ).length;
+    const slaBreaches = breachedTickets.length;
+    const slaCompliance = analytics?.slaCompliancePercentage ?? 100;
+    return { openTickets, resolved, unassigned, slaBreaches, slaCompliance };
+  }, [tickets, breachedTickets, analytics]);
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
+      const term = search.toLowerCase();
+      const formattedId = `TKT-${ticket.id.slice(0, 3).toUpperCase()}`;
       const matchesSearch =
         search === '' ||
-        ticket.id.toLowerCase().includes(search.toLowerCase()) ||
-        ticket.subject.toLowerCase().includes(search.toLowerCase()) ||
-        (ticket.assigned && ticket.assigned.toLowerCase().includes(search.toLowerCase()));
+        formattedId.toLowerCase().includes(term) ||
+        ticket.id.toLowerCase().includes(term) ||
+        ticket.subject.toLowerCase().includes(term) ||
+        (ticket.assigned && ticket.assigned.toLowerCase().includes(term));
 
       const matchesStatus = status === 'All' || ticket.status === status;
       const matchesPriority = priority === 'All' || ticket.priority === priority;
@@ -84,6 +106,7 @@ function ManagerDashboardPage() {
       return matchesSearch && matchesStatus && matchesPriority && matchesAssigned;
     });
   }, [tickets, search, status, priority, assignedTo]);
+
 
   const handleSelectTicket = (ticket: ManagerTicket) => {
     setSelectedTicket(ticket);
@@ -95,9 +118,23 @@ function ManagerDashboardPage() {
     setTimeout(() => setSelectedTicket(null), 250);
   };
 
+  const loadAgents = async () => {
+    setAgentsLoading(true);
+    setAgentsError(null);
+    try {
+      const data = await getAgentsRequest();
+      setAgents(data);
+    } catch (err) {
+      setAgentsError(err instanceof Error ? err.message : 'Failed to load agents');
+    } finally {
+      setAgentsLoading(false);
+    }
+  };
+
   const handleOpenReassign = () => {
     setDrawerOpen(false);
     setReassignOpen(true);
+    loadAgents();
   };
 
   const handleReassign = async (agentId: string) => {
@@ -147,29 +184,43 @@ function ManagerDashboardPage() {
             Manager Dashboard
           </Typography>
 
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 2,
-              py: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: '10px',
-              backgroundColor: 'background.paper',
-              color: 'text.secondary',
-              fontSize: 14,
-              cursor: 'pointer',
+          <DateRangeFilter
+            start={fromDate}
+            end={toDate}
+            onChange={(start, end) => {
+              setFromDate(start);
+              setToDate(end);
             }}
-          >
-            <CalendarIcon size={16} color="currentColor" />
-            Apr 1 - Apr 7, 2026
-          </Box>
+          />
         </Box>
 
         <Box sx={{ mb: 5 }}>
-          <StatsGrid onSlaClick={() => setSlaOpen(true)} />
+          <StatsGrid
+            openTickets={stats.openTickets}
+            resolved={stats.resolved}
+            unassigned={stats.unassigned}
+            slaBreaches={stats.slaBreaches}
+            slaCompliance={stats.slaCompliance}
+            onSlaClick={() => setSlaOpen(true)}
+          />
+
+          {breachError && (
+            <Box
+              sx={{
+                mt: 2,
+                py: 1.5,
+                px: 2,
+                borderRadius: '8px',
+                backgroundColor: 'error.light',
+                border: '1px solid',
+                borderColor: 'error.main',
+              }}
+            >
+              <Typography sx={{ color: 'error.main', fontSize: '13px' }}>
+                SLA breach data unavailable: {breachError}
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         <Box
@@ -189,6 +240,7 @@ function ManagerDashboardPage() {
             onPriorityChange={setPriority}
             assignedTo={assignedTo}
             onAssignedChange={setAssignedTo}
+            assignedOptions={assignedOptions}
             onClear={() => {
               setSearch('');
               setStatus('All');
@@ -276,14 +328,14 @@ function ManagerDashboardPage() {
       <SlaBreachesModal
         open={slaOpen}
         onClose={() => setSlaOpen(false)}
-        tickets={tickets}
+        tickets={breachedTickets}
         onRowClick={handleSlaRowClick}
       />
     </>
   );
 }
 
-function mapBackendTicket(ticket: BackendTicket): ManagerTicket {
+function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTicket {
   const statusMap: Record<string, ManagerTicket['status']> = {
     Active: 'Active',
     Ongoing: 'Ongoing',
@@ -318,14 +370,17 @@ function mapBackendTicket(ticket: BackendTicket): ManagerTicket {
     backendId: ticket.id,
     subject: ticket.title,
     requester,
+    requesterId: ticket.createdById,
     requesterInitials,
     status: statusMap[ticket.status] || 'Active',
     priority: priorityMap[ticket.priority] || 'Medium',
     assigned: ticket.assignedAgentName || null,
     updatedAt: ticket.isBreached && ticket.overdueBy ? `Overdue by ${ticket.overdueBy}` : formatDate(updatedDate),
     createdAt: formatDate(createdDate),
+    createdAtDate: ticket.createdAt,
     description: ticket.description,
     isBreach: ticket.isBreached,
+    isRated: ticket.isRated,
     overdueBy: ticket.overdueBy || undefined,
   };
 }

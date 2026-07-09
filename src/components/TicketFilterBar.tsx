@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Box, Button, InputBase, Paper, useTheme } from '@mui/material';
 
 const SearchIcon = () => (
@@ -8,29 +7,25 @@ const SearchIcon = () => (
   </svg>
 );
 
-const FilterIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M4 5H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M4 12H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M4 19H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <circle cx="9" cy="5" r="2" fill="currentColor" />
-    <circle cx="15" cy="12" r="2" fill="currentColor" />
-    <circle cx="9" cy="19" r="2" fill="currentColor" />
-  </svg>
-);
 
 type FilterTab = 'All' | 'Mine' | 'Unassigned';
 
 interface TicketFilterBarProps {
   activeTab: FilterTab;
   onChange: (tab: FilterTab) => void;
+  search?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 /**
  * Filter tabs, search, and filter icon for the ticket table.
  */
-function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
-  const [search, setSearch] = useState('');
+function TicketFilterBar({
+  activeTab,
+  onChange,
+  search = '',
+  onSearchChange,
+}: TicketFilterBarProps) {
   const theme = useTheme();
 
   return (
@@ -84,26 +79,11 @@ function TicketFilterBar({ activeTab, onChange }: TicketFilterBarProps) {
           <InputBase
             placeholder="Search tickets..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             sx={{ ml: 1, fontSize: 14, flex: 1 }}
           />
         </Paper>
 
-        <Button
-          variant="outlined"
-          startIcon={<FilterIcon />}
-          sx={{
-            textTransform: 'none',
-            color: 'text.secondary',
-            borderColor: theme.palette.divider,
-            borderRadius: '10px',
-            fontSize: 13,
-            fontWeight: 500,
-            '&:hover': { borderColor: theme.palette.divider, backgroundColor: theme.palette.action.hover },
-          }}
-        >
-          Filter
-        </Button>
       </Box>
     </Box>
   );

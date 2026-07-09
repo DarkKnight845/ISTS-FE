@@ -28,7 +28,7 @@ interface SlaBreachesModalProps {
 
 function SlaBreachesModal({ open, onClose, tickets, onRowClick }: SlaBreachesModalProps) {
   const theme = useTheme();
-  const breaches = tickets.filter((t) => t.isBreach);
+  const breaches = tickets;
 
   return (
     <Dialog
@@ -118,7 +118,7 @@ function SlaBreachesModal({ open, onClose, tickets, onRowClick }: SlaBreachesMod
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ fontSize: '13px', color: 'text.primary', borderBottom: `1px solid ${theme.palette.divider}` }}>
-                        {ticket.id}
+                        TKT-{ticket.id.slice(0, 3).toUpperCase()}
                       </TableCell>
                       <TableCell sx={{ fontSize: '13px', color: 'text.primary', borderBottom: `1px solid ${theme.palette.divider}`, maxWidth: 220 }}>
                         <Typography noWrap sx={{ fontSize: '13px', color: 'text.primary' }}>

@@ -16,12 +16,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Rating,
+  TextField,
 } from '@mui/material';
 import * as signalR from '@microsoft/signalr';
-import type { Ticket } from '../data/mockTickets';
+import type { Ticket } from '@/components/ui/types/ticket';
 import { useTicketMessages } from '@/hooks/useTicketMessages';
 import {
   assignTicketRequest,
+  createRatingRequest,
   escalateTicketRequest,
   sendTicketMessageRequest,
   updateTicketStatusRequest,
@@ -79,9 +82,12 @@ function MessageBubble({ message, isMe }: { message: TicketMessageDto; isMe: boo
               href={message.attachmentUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: isMe ? '#BFDBFE' : 'primary.main', fontSize: 12 }}
+              style={{ color: isMe ? '#BFDBFE' : 'primary.main', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
-              Attachment
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+              View file
             </a>
           </Box>
         )}
@@ -116,6 +122,13 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [escalateDialogOpen, setEscalateDialogOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const [rating, setRating] = useState<number | null>(null);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -142,14 +155,23 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
   }, [messages]);
 
   useEffect(() => {
-    if (open) {
-      setReply('');
-      setAttachment(null);
-      setActionError(null);
-    }
-  }, [open, ticket?.backendId]);
+    setRating(null);
+    setRatingComment('');
+    setRatingError(null);
+    setRatingSubmitted(false);
+  }, [ticket?.backendId]);
 
   if (!ticket) return null;
+
+  const handleClose = () => {
+    setReply('');
+    setAttachment(null);
+    setActionError(null);
+    setRating(null);
+    setRatingComment('');
+    setRatingError(null);
+    onClose();
+  };
 
   const handleAccept = async () => {
     if (!currentUserId) {
@@ -236,12 +258,40 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
     }
   };
 
+  const canRate =
+    Boolean(currentUserId) &&
+    ticket.requesterId === currentUserId &&
+    (ticket.status === 'Resolved' || ticket.status === 'Closed') &&
+    !ticket.isRated;
+
+  const handleSubmitRating = async () => {
+    if (!rating) return;
+    setRatingSubmitting(true);
+    setRatingError(null);
+    try {
+      await createRatingRequest({
+        ticketId: ticket.backendId,
+        rating,
+        comment: ratingComment.trim(),
+      });
+      setRatingSubmitted(true);
+      onTicketUpdated?.({ ...ticket, isRated: true });
+      setTimeout(() => {
+        setRatingSubmitted(false);
+      }, 3000);
+    } catch (err) {
+      setRatingError(err instanceof Error ? err.message : 'Failed to submit rating');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Drawer
         anchor="right"
         open={open}
-        onClose={onClose}
+        onClose={handleClose}
         sx={{
           '& .MuiDrawer-paper': {
             width: { xs: '100%', sm: 420 },
@@ -263,7 +313,7 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
         >
           <Box>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              {ticket.id}
+              TKT-{ticket.id.slice(0, 3).toUpperCase()}
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {ticket.subject}
@@ -319,7 +369,7 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
                 </Menu>
               </>
             )}
-            <IconButton onClick={onClose} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '6px', color: 'text.secondary' }}>
+            <IconButton onClick={handleClose} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '6px', color: 'text.secondary' }}>
               <CloseIcon size={20} />
             </IconButton>
           </Box>
@@ -332,6 +382,157 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
           <DetailRow label="Assigned to" value={ticket.assigned ?? 'Unassigned'} />
           <DetailRow label="Created" value={ticket.createdAt} />
         </Box>
+
+        {/* Original Ticket */}
+{(ticket.description || ticket.attachmentUrl) && (
+  <Box
+    sx={{
+      px: 3,
+      py: 2.5,
+      borderBottom: '1px solid',
+      borderColor: 'divider',
+      backgroundColor: 'background.paper',
+    }}
+  >
+    <Typography
+      variant="subtitle2"
+      sx={{
+        fontWeight: 600,
+        mb: 1.5,
+      }}
+    >
+      Original Request
+    </Typography>
+
+    {ticket.description && (
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'text.secondary',
+          lineHeight: 1.7,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {ticket.description}
+      </Typography>
+    )}
+
+    {ticket.attachmentUrl && (
+      <Box sx={{ mt: 2 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            display: 'block',
+            mb: 1,
+            color: 'text.secondary',
+          }}
+        >
+          Attachment
+        </Typography>
+        <Box
+          component="img"
+          src={ticket.attachmentUrl}
+          alt="Ticket attachment"
+          onClick={() => {
+            if (ticket.attachmentUrl) window.open(ticket.attachmentUrl, '_blank');
+          }}
+          sx={{
+            width: '100%',
+            maxHeight: 260,
+            objectFit: 'cover',
+            borderRadius: '10px',
+            border: '1px solid',
+            borderColor: 'divider',
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.95,
+            },
+          }}
+        />
+      </Box>
+    )}
+  </Box>
+)}
+
+        {/* Rating */}
+        {canRate && (
+          <Box
+            sx={{
+              px: 3,
+              py: 2.5,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: 'background.paper',
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Rate this resolution
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 13, mb: 1.5 }}>
+              How would you rate the support you received?
+            </Typography>
+
+            <Rating
+              value={rating}
+              onChange={(_e, value) => setRating(value)}
+              sx={{ mb: 1.5 }}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              maxRows={4}
+              placeholder="Add a comment (optional)"
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              sx={{
+                mb: 1.5,
+                '& .MuiOutlinedInput-root': {
+                  fontSize: 14,
+                  backgroundColor: 'background.default',
+                },
+              }}
+            />
+
+            {ratingError && (
+              <Typography sx={{ color: 'error.main', fontSize: '13px', mb: 1.5 }}>
+                {ratingError}
+              </Typography>
+            )}
+
+            <Button
+              variant="contained"
+              disabled={!rating || ratingSubmitting}
+              onClick={handleSubmitRating}
+              sx={{
+                textTransform: 'none',
+                backgroundColor: 'primary.main',
+                borderRadius: '8px',
+                fontWeight: 500,
+                '&:hover': { backgroundColor: 'primary.dark' },
+              }}
+            >
+              {ratingSubmitting ? <CircularProgress size={18} sx={{ color: 'primary.contrastText' }} /> : 'Submit rating'}
+            </Button>
+          </Box>
+        )}
+
+        {ratingSubmitted && (
+          <Box
+            sx={{
+              px: 3,
+              py: 2,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: 'success.light',
+            }}
+          >
+            <Typography sx={{ color: 'success.dark', fontSize: 14, fontWeight: 500 }}>
+              Thanks for your feedback!
+            </Typography>
+          </Box>
+        )}
 
         {/* Chat thread */}
         <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3, backgroundColor: 'background.default' }}>

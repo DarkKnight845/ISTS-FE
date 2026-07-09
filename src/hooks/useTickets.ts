@@ -1,26 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getTicketsRequest } from '@/lib/api';
+import { getTicketsRequest, type GetTicketsFilters, type TicketResponseDto } from '@/lib/api';
 
-export interface BackendTicket {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  assignedAgentId: string | null;
-  assignedAgentName: string | null;
-  createdById: string;
-  createdByName: string;
-  categoryId: string;
-  categoryName: string;
-  departmentId: string;
-  departmentName: string;
-  createdAt: string;
-  updatedAt: string | null;
-  slaDueAt: string | null;
-  isBreached: boolean;
-  overdueBy: string | null;
-}
+export interface BackendTicket extends TicketResponseDto {}
 
 interface UseTicketsResult {
   tickets: BackendTicket[] | null;
@@ -29,7 +10,7 @@ interface UseTicketsResult {
   refetch: () => void;
 }
 
-export function useTickets(): UseTicketsResult {
+export function useTickets(filters?: GetTicketsFilters): UseTicketsResult {
   const [tickets, setTickets] = useState<BackendTicket[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +19,7 @@ export function useTickets(): UseTicketsResult {
     setLoading(true);
     setError(null);
     try {
-      const data = await getTicketsRequest();
+      const data = await getTicketsRequest(filters);
       setTickets(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tickets');
@@ -50,7 +31,8 @@ export function useTickets(): UseTicketsResult {
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filters)]);
 
   return { tickets, loading, error, refetch: fetchTickets };
 }

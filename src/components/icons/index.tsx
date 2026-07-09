@@ -88,8 +88,8 @@ export const TicketTagIcon = svgIcon(
 export const AnalyticsIcon = svgIcon(
   '0 0 24 24',
   <>
-    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
   </>
 );
 

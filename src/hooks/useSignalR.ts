@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { getToken, API_BASE_URL } from '@/lib/api';
+import { getToken, SIGNALR_BASE_URL } from '@/lib/api';
 import type { TicketMessageDto, NotificationDto } from '@/lib/api';
 
 interface UseSignalRResult {
@@ -32,7 +32,7 @@ export function useSignalR(listeners: SignalRListener = {}): UseSignalRResult {
     if (!token) return;
 
     const supportConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/hubs/support`, {
+      .withUrl(`${SIGNALR_BASE_URL}/hubs/support`, {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect()
@@ -40,7 +40,7 @@ export function useSignalR(listeners: SignalRListener = {}): UseSignalRResult {
       .build();
 
     const notificationConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/hubs/notifications`, {
+      .withUrl(`${SIGNALR_BASE_URL}/hubs/notifications`, {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect()

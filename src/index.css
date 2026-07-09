@@ -22,6 +22,31 @@
   font-weight: 700;
 }
 
+/* Alias for components that use the lower-case spelling. */
+@font-face {
+  font-family: "General sans";
+  src: url(./assets/general-sans/GeneralSans-Regular.otf);
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "General sans";
+  src: url(./assets/general-sans/GeneralSans-Medium.otf);
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "General sans";
+  src: url(./assets/general-sans/GeneralSans-Semibold.otf);
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "General sans";
+  src: url(./assets/general-sans/GeneralSans-Bold.otf);
+  font-weight: 700;
+}
+
 body {
   font-family: "General Sans", sans-serif;
   margin: 0;

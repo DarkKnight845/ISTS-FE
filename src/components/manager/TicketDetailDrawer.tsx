@@ -59,7 +59,7 @@ function TicketDetailDrawer({ open, ticket, onClose, onReassign }: TicketDetailD
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '18px' }}>
-              {ticket.id}
+              TKT-{ticket.id.slice(0, 3).toUpperCase()}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
               {ticket.subject}

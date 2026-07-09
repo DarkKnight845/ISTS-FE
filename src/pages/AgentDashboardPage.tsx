@@ -1,19 +1,40 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Header from '../components/Header';
 import StatsCardGrid from '../components/StatsCardGrid';
 import TicketFilterBar from '../components/TicketFilterBar';
 import TicketTable from '../components/TicketTable';
 import TicketDetailDrawer from '../components/TicketDetailDrawer';
-import { type Ticket } from '../data/mockTickets';
+import DateRangeFilter from '../components/DateRangeFilter';
+import type { Ticket } from '@/components/ui/types/ticket';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { useOpenTickets } from '@/hooks/useOpenTickets';
+import { useAverageRating } from '@/hooks/useAverageRating';
 import { useSignalR } from '@/hooks/useSignalR';
 import { useAuth } from '@/context/AuthContext';
-import type { TicketResponseDto, TicketMessageDto, NotificationDto } from '@/lib/api';
-import { CalendarIcon } from '@/components/icons';
+import type { TicketResponseDto, TicketMessageDto } from '@/lib/api';
 
 type FilterTab = 'All' | 'Mine' | 'Unassigned';
+
+function isDateInRange(isoDate: string, start?: string, end?: string) {
+  if (!start && !end) return true;
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return true;
+
+  if (start) {
+    const startDate = new Date(start);
+    startDate.setHours(0, 0, 0, 0);
+    if (date < startDate) return false;
+  }
+
+  if (end) {
+    const endDate = new Date(end);
+    endDate.setHours(23, 59, 59, 999);
+    if (date > endDate) return false;
+  }
+
+  return true;
+}
 
 /**
  * Agent dashboard content rendered inside DashboardLayout.
@@ -32,25 +53,17 @@ function AgentDashboardPage() {
     error: openError,
     refetch: refetchOpen,
   } = useOpenTickets();
+  const { rating: averageRating, loading: ratingLoading } = useAverageRating(currentUserId);
 
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
-  const [myTickets, setMyTickets] = useState<Ticket[]>([]);
-  const [unassignedTickets, setUnassignedTickets] = useState<Ticket[]>([]);
-
-  useEffect(() => {
-    if (assignedTickets) {
-      setMyTickets(assignedTickets.map(mapBackendTicket));
-    }
-  }, [assignedTickets]);
-
-  useEffect(() => {
-    if (openTickets) {
-      setUnassignedTickets(openTickets.map(mapBackendTicket));
-    }
-  }, [openTickets]);
+  const myTickets = useMemo(() => assignedTickets?.map(mapBackendTicket) ?? [], [assignedTickets]);
+  const unassignedTickets = useMemo(() => openTickets?.map(mapBackendTicket) ?? [], [openTickets]);
 
   const handleNewMessage = useCallback((message: TicketMessageDto) => {
     // Refresh lists when a new message arrives so counts stay current.
@@ -59,7 +72,7 @@ function AgentDashboardPage() {
     refetchOpen();
   }, [refetchAssigned, refetchOpen, selectedTicket?.backendId]);
 
-  const handleNewNotification = useCallback((_notification: NotificationDto) => {
+  const handleNewNotification = useCallback(() => {
     // Notification handled by the notification system.
   }, []);
 
@@ -69,15 +82,40 @@ function AgentDashboardPage() {
   });
 
   const filteredTickets = useMemo(() => {
+    let tickets: Ticket[];
     switch (activeTab) {
       case 'Mine':
-        return myTickets;
+        tickets = myTickets;
+        break;
       case 'Unassigned':
-        return unassignedTickets;
+        tickets = unassignedTickets;
+        break;
       default:
-        return [...unassignedTickets, ...myTickets];
+        tickets = [...unassignedTickets, ...myTickets];
     }
-  }, [activeTab, myTickets, unassignedTickets]);
+
+    const term = search.trim().toLowerCase();
+    if (term) {
+      tickets = tickets.filter((t) => {
+        const formattedId = `TKT-${t.id.slice(0, 3).toUpperCase()}`;
+        return (
+          formattedId.toLowerCase().includes(term) ||
+          t.id.toLowerCase().includes(term) ||
+          t.subject.toLowerCase().includes(term) ||
+          t.requester.toLowerCase().includes(term) ||
+          t.status.toLowerCase().includes(term) ||
+          t.priority.toLowerCase().includes(term) ||
+          (t.assigned?.toLowerCase().includes(term) ?? false)
+        );
+      });
+    }
+
+    if (fromDate || toDate) {
+      tickets = tickets.filter((t) => isDateInRange(t.createdAtDate, fromDate, toDate));
+    }
+
+    return tickets;
+  }, [activeTab, myTickets, unassignedTickets, search, fromDate, toDate]);
 
   const handleSelectTicket = (ticket: Ticket) => {
     setSelectedTicket(ticket);
@@ -114,25 +152,14 @@ function AgentDashboardPage() {
             Agent Dashboard
           </Typography>
 
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 2,
-              py: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: '10px',
-              backgroundColor: 'background.paper',
-              color: 'text.secondary',
-              fontSize: 14,
-              cursor: 'pointer',
+          <DateRangeFilter
+            start={fromDate}
+            end={toDate}
+            onChange={(start, end) => {
+              setFromDate(start);
+              setToDate(end);
             }}
-          >
-            <CalendarIcon size={16} color="currentColor" />
-            Apr 1 - Apr 7, 2026
-          </Box>
+          />
         </Box>
 
         <Box sx={{ mb: 5 }}>
@@ -140,6 +167,8 @@ function AgentDashboardPage() {
             assignedToMe={myTickets.length}
             resolved={myTickets.filter((t) => t.status === 'Resolved').length}
             unassigned={unassignedTickets.length}
+            averageRating={averageRating?.averageRating ?? null}
+            totalRatings={averageRating?.totalRatings ?? 0}
           />
         </Box>
 
@@ -151,11 +180,11 @@ function AgentDashboardPage() {
             mb: 3,
           }}
         >
-          <TicketFilterBar activeTab={activeTab} onChange={setActiveTab} />
+          <TicketFilterBar activeTab={activeTab} onChange={setActiveTab} search={search} onSearchChange={setSearch} />
         </Box>
 
         <Box sx={{ minHeight: 0 }}>
-          {assignedLoading || openLoading ? (
+          {assignedLoading || openLoading || ratingLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
               <CircularProgress size={32} sx={{ color: 'primary.main' }} />
             </Box>
@@ -221,13 +250,19 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     id: ticket.id.slice(0, 8).toUpperCase(),
     backendId: ticket.id,
     subject: ticket.title,
+    department: ticket.departmentName || '—',
+    category: ticket.categoryName || '—',
     requester: ticket.createdByName || 'Unknown',
+    requesterId: ticket.createdById,
     status: statusMap[ticket.status] || 'Active',
     priority: priorityMap[ticket.priority] || 'Medium',
     assigned: ticket.assignedAgentName || null,
     updatedAt: ticket.isBreached && ticket.overdueBy ? `Overdue by ${ticket.overdueBy}` : formatDate(ticket.updatedAt),
     createdAt: formatDate(ticket.createdAt),
-    messages: [],
+    createdAtDate: ticket.createdAt,
+    description: ticket.description,
+    isRated: ticket.isRated,
+    attachmentUrl: ticket.attachmentUrl || null,
   };
 }
 

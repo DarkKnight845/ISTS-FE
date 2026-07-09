@@ -15,9 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 
 import {
-  getCategoriesRequest,
   getDepartmentsRequest,
-  type CategoryDto,
   type DepartmentDto,
 } from "@/lib/api";
 
@@ -35,10 +33,10 @@ type RaiseTicketFormProps = {
 };
 
 const PRIORITY_OPTIONS = [
-  { label: "Low", value: "Low", color: "#16A34A" },
-  { label: "Medium", value: "Medium", color: "#EAB308" },
-  { label: "High", value: "High", color: "#F59E0B" },
-  { label: "Urgent", value: "Urgent", color: "#DC2626" },
+  { label: "Low", value: "Low", color: "#16A34A", description: "General questions or requests with no immediate impact." },
+  { label: "Medium", value: "Medium", color: "#EAB308", description: "Issues affecting one person or with an acceptable workaround." },
+  { label: "High", value: "High", color: "#F59E0B", description: "Significant disruption for a user or team; needs attention soon." },
+  { label: "Urgent", value: "Urgent", color: "#DC2626", description: "Critical outage or issue affecting multiple users or operations." },
 ];
 
 function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
@@ -51,7 +49,6 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
   const [attachment, setAttachment] = useState<File | null>(null);
 
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -65,13 +62,9 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
       setLoading(true);
       setFetchError(null);
       try {
-        const [depts, cats] = await Promise.all([
-          getDepartmentsRequest(),
-          getCategoriesRequest(),
-        ]);
+        const depts = await getDepartmentsRequest();
         if (!cancelled) {
           setDepartments(depts ?? []);
-          setCategories(cats ?? []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -98,20 +91,9 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
   const filteredCategories = useMemo(() => {
     if (!departmentId) return [];
     const dept = departments.find((d) => d.id === departmentId);
-    if (dept?.categories?.length) {
-      return dept.categories;
-    }
-    return categories.filter((c) => c.departmentId === departmentId);
-  }, [departmentId, departments, categories]);
+    return dept?.categories ?? [];
+  }, [departmentId, departments]);
 
-  useEffect(() => {
-    if (
-      categoryId &&
-      !filteredCategories.some((c) => c.id === categoryId)
-    ) {
-      setCategoryId("");
-    }
-  }, [filteredCategories, categoryId]);
 
   const inputStyle = {
     bgcolor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[50],
@@ -247,7 +229,10 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
               <Select
                 displayEmpty
                 value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
+                onChange={(e) => {
+                  setDepartmentId(e.target.value);
+                  setCategoryId("");
+                }}
                 sx={inputStyle}
               >
                 <MenuItem value="" disabled>
@@ -387,20 +372,15 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
                   sx={{
                     display: "flex",
                     alignItems: "center",
-
                     gap: 1,
-
                     mb: 1,
                   }}
                 >
                   <Box
                     sx={{
                       width: 10,
-
                       height: 10,
-
                       borderRadius: "50%",
-
                       bgcolor: item.color,
                     }}
                   />
@@ -414,6 +394,17 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
                     {item.label}
                   </Typography>
                 </Box>
+
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    color: "text.secondary",
+                    fontFamily: "General sans",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {item.description}
+                </Typography>
               </Box>
             );
           })}

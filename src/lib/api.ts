@@ -1,4 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5011";
+export const SIGNALR_BASE_URL = import.meta.env.VITE_SIGNALR_BASE_URL || API_BASE_URL;
 
 export interface ApiResponse<T> {
   succeeded: boolean;
@@ -47,6 +48,7 @@ export interface TicketResponseDto {
   slaDueAt: string | null;
   isBreached: boolean;
   overdueBy: string | null;
+  isRated: boolean;
   attachmentUrl: string | null;
 }
 
@@ -236,6 +238,35 @@ export async function getAssignedTicketsRequest() {
 
 export async function getTicketAnalyticsRequest() {
   return apiRequest<TicketAnalyticsDto>("/api/tickets/analytics");
+}
+
+export interface AverageRatingDto {
+  averageRating: number;
+  totalRatings: number;
+}
+
+export async function getAverageRatingRequest(agentId?: string | null) {
+  const params = new URLSearchParams();
+  if (agentId) params.append("agentId", agentId);
+  const query = params.toString();
+  return apiRequest<AverageRatingDto>(`/api/Rating/average${query ? `?${query}` : ""}`);
+}
+
+export interface CreateRatingPayload {
+  ticketId: string;
+  rating: number;
+  comment?: string;
+}
+
+export async function createRatingRequest(payload: CreateRatingPayload) {
+  return apiRequest<object>("/api/Rating", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getBreachedTicketsRequest() {
+  return apiRequest<TicketResponseDto[]>("/api/Tickets/breached");
 }
 
 export async function assignTicketRequest(ticketId: string, agentId: string) {

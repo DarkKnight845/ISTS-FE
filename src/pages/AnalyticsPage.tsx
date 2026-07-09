@@ -7,6 +7,17 @@ import InsightCard from '@/components/analytics/InsightCard';
 import { CalendarIcon } from '@/components/icons';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
 
+function getCurrentWeekLabel() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay());
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `${fmt(start)} - ${fmt(end)}`;
+}
+
 function AnalyticsPage() {
   const theme = useTheme();
   const { analytics, loading, error } = useTicketAnalytics();
@@ -48,6 +59,13 @@ function AnalyticsPage() {
     analytics.statusDistribution.reduce((sum, segment) => sum + segment.value, 0) ||
     analytics.weeklyVolume.reduce((sum, point) => sum + point.received, 0);
 
+  const breachInsight = analytics.insights.find((i) => i.label === 'SLA breaches');
+  const breachCount = breachInsight ? parseInt(breachInsight.value, 10) || 0 : 0;
+  const slaCaption =
+    breachCount === 0
+      ? 'All SLA-tracked tickets are within target.'
+      : `${breachCount} ticket${breachCount === 1 ? '' : 's'} currently breached SLA.`;
+
   return (
     <Box sx={{ p: 4, flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <Box
@@ -81,11 +99,10 @@ function AnalyticsPage() {
             backgroundColor: 'background.paper',
             color: 'text.secondary',
             fontSize: 14,
-            cursor: 'pointer',
           }}
         >
-          <CalendarIcon size={16} />
-          Apr 1 - Apr 7, 2026
+          <CalendarIcon size={16} color="currentColor" />
+          {getCurrentWeekLabel()}
         </Box>
       </Box>
 
@@ -114,6 +131,7 @@ function AnalyticsPage() {
           value={analytics.slaCompliancePercentage}
           title="SLA compliance"
           subtitle="Percentage of tickets resolved within SLA"
+          caption={slaCaption}
         />
       </Box>
 

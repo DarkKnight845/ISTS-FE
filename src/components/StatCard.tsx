@@ -30,6 +30,11 @@ function StatCard({ title, value, trend, trendUp = true, icon, iconBg }: StatCar
         height: '100%',
         boxSizing: 'border-box',
         backgroundColor: 'background.paper',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        },
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 6 }}>
