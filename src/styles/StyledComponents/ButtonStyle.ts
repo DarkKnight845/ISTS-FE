@@ -16,7 +16,7 @@ export const StyledButton = styled(LoadingButton)(
     "&.Mui-disabled": {
       color: theme.palette.text.disabled,
       backgroundColor:
-        variant === "text" ? "transparent" : theme.palette.action.disabledBackground,
+        variant === "text" ? "transparent" : (theme.palette.action as unknown as { disabledBackground?: string }).disabledBackground ?? "rgba(0, 0, 0, 0.12)",
     },
     "& .MuiButton-startIcon": {
       fontSize: "10px",
