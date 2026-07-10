@@ -35,7 +35,7 @@ export const weeklyTrend: WeeklyPoint[] = [
 ];
 
 export const statusDistribution: StatusSegment[] = [
-  { label: 'Active', value: 14, color: '#2559AA' },
+  { label: 'Open', value: 14, color: '#2559AA' },
   { label: 'Ongoing', value: 8, color: '#F59E0B' },
   { label: 'Resolved', value: 21, color: '#16A34A' },
 ];

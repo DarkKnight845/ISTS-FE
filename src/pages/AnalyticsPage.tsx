@@ -4,23 +4,21 @@ import DonutChart from '@/components/analytics/DonutChart';
 import BarChart from '@/components/analytics/BarChart';
 import SlaGauge from '@/components/analytics/SlaGauge';
 import InsightCard from '@/components/analytics/InsightCard';
-import { CalendarIcon } from '@/components/icons';
+import DateRangeFilter from '@/components/DateRangeFilter';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
-
-function getCurrentWeekLabel() {
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay());
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return `${fmt(start)} - ${fmt(end)}`;
-}
+import { useState } from 'react';
 
 function AnalyticsPage() {
   const theme = useTheme();
-  const { analytics, loading, error } = useTicketAnalytics();
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const filters = {
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
+  };
+
+  const { analytics, loading, error } = useTicketAnalytics(filters);
 
   if (loading) {
     return (
@@ -87,23 +85,14 @@ function AnalyticsPage() {
           </Typography>
         </Box>
 
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 1,
-            border: `1px solid ${theme.palette.divider}`,
-            borderRadius: '10px',
-            backgroundColor: 'background.paper',
-            color: 'text.secondary',
-            fontSize: 14,
+        <DateRangeFilter
+          start={fromDate}
+          end={toDate}
+          onChange={(start, end) => {
+            setFromDate(start);
+            setToDate(end);
           }}
-        >
-          <CalendarIcon size={16} color="currentColor" />
-          {getCurrentWeekLabel()}
-        </Box>
+        />
       </Box>
 
       <Box sx={{ mb: 4 }}>
@@ -145,7 +134,7 @@ function AnalyticsPage() {
         <DonutChart
           data={analytics.statusDistribution}
           title="Tickets by status"
-          subtitle="Active, ongoing, and resolved tickets"
+          subtitle="Open, ongoing, and resolved tickets"
           centerLabel="Total"
           centerValue={String(totalTickets)}
         />

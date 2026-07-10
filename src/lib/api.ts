@@ -1,5 +1,13 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5011";
-export const SIGNALR_BASE_URL = import.meta.env.VITE_SIGNALR_BASE_URL || API_BASE_URL;
+import { getCached, invalidateCache, setCached } from "./cache";
+import { decodeJwt } from "./jwt";
+
+const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) || "";
+if (!rawApiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL is not defined. Set it in .env.production before building.");
+}
+
+export const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
+export const SIGNALR_BASE_URL = ((import.meta.env.VITE_SIGNALR_BASE_URL as string | undefined) || API_BASE_URL).replace(/\/$/, "");
 
 export interface ApiResponse<T> {
   succeeded: boolean;
@@ -139,6 +147,16 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const method = options.method?.toUpperCase() || "GET";
+  const isGet = method === "GET";
+
+  if (isGet) {
+    const cached = getCached<T>(endpoint);
+    if (cached !== undefined) {
+      return cached;
+    }
+  }
+
   const token = getToken();
 
   const headers: Record<string, string> = {
@@ -168,11 +186,22 @@ export async function apiRequest<T>(
     const errors = wrapped?.errors?.length
       ? wrapped.errors.join("\n")
       : wrapped?.message || `HTTP ${response.status}`;
+
+    if (response.status === 401) {
+      window.dispatchEvent(new Event("ists:auth:expired"));
+      const authError = new Error(errors);
+      (authError as Error & { status?: number }).status = 401;
+      throw authError;
+    }
+
     throw new Error(errors);
   }
 
   // Some endpoints return the payload directly instead of wrapping it.
   if (Array.isArray(body)) {
+    if (isGet) {
+      setCached(endpoint, body);
+    }
     return body as T;
   }
 
@@ -188,6 +217,10 @@ export async function apiRequest<T>(
     throw new Error("Empty response from server");
   }
 
+  if (isGet) {
+    setCached(endpoint, wrapped.data);
+  }
+
   return wrapped.data;
 }
 
@@ -196,6 +229,14 @@ export async function loginRequest(email: string, password: string) {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+}
+
+export function isTokenExpired(token: string): boolean {
+  const payload = decodeJwt(token);
+  const exp = payload?.exp;
+  if (typeof exp !== "number") return false;
+  // exp is seconds since epoch; add a 60-second buffer to avoid edge cases.
+  return exp * 1000 < Date.now() + 60_000;
 }
 
 export async function getCurrentUserRequest() {
@@ -228,6 +269,10 @@ export async function getTicketsRequest(filters?: GetTicketsFilters) {
   return apiRequest<TicketResponseDto[]>(`/api/tickets${query ? `?${query}` : ""}`);
 }
 
+export async function getTicketByIdRequest(ticketId: string) {
+  return apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}`);
+}
+
 export async function getMyTicketsRequest() {
   return apiRequest<TicketResponseDto[]>("/api/tickets/my-tickets");
 }
@@ -236,8 +281,13 @@ export async function getAssignedTicketsRequest() {
   return apiRequest<TicketResponseDto[]>("/api/tickets/assigned");
 }
 
-export async function getTicketAnalyticsRequest() {
-  return apiRequest<TicketAnalyticsDto>("/api/tickets/analytics");
+export async function getTicketAnalyticsRequest(filters?: { fromDate?: string; toDate?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.fromDate) params.append("fromDate", filters.fromDate);
+  if (filters?.toDate) params.append("toDate", filters.toDate);
+
+  const query = params.toString();
+  return apiRequest<TicketAnalyticsDto>(`/api/tickets/analytics${query ? `?${query}` : ""}`);
 }
 
 export interface AverageRatingDto {
@@ -259,10 +309,13 @@ export interface CreateRatingPayload {
 }
 
 export async function createRatingRequest(payload: CreateRatingPayload) {
-  return apiRequest<object>("/api/Rating", {
+  const result = await apiRequest<object>("/api/Rating", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  invalidateCache("/api/Rating");
+  invalidateCache("/api/tickets");
+  return result;
 }
 
 export async function getBreachedTicketsRequest() {
@@ -270,23 +323,29 @@ export async function getBreachedTicketsRequest() {
 }
 
 export async function assignTicketRequest(ticketId: string, agentId: string) {
-  return apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/assign`, {
+  const result = await apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/assign`, {
     method: "PUT",
     body: JSON.stringify({ agentId }),
   });
+  invalidateCache("/api/tickets");
+  return result;
 }
 
 export async function updateTicketStatusRequest(ticketId: string, status: string) {
-  return apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/status`, {
+  const result = await apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/status`, {
     method: "PUT",
     body: JSON.stringify({ status }),
   });
+  invalidateCache("/api/tickets");
+  return result;
 }
 
 export async function escalateTicketRequest(ticketId: string) {
-  return apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/escalate`, {
+  const result = await apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}/escalate`, {
     method: "PUT",
   });
+  invalidateCache("/api/tickets");
+  return result;
 }
 
 export async function getTicketMessagesRequest(ticketId: string) {
@@ -334,6 +393,7 @@ export async function sendTicketMessageRequest(
     throw new Error("Empty response from server");
   }
 
+  invalidateCache("/api/tickets");
   return body.data;
 }
 
@@ -342,9 +402,11 @@ export async function getNotificationsRequest() {
 }
 
 export async function markNotificationAsReadRequest(notificationId: string) {
-  return apiRequest<object>(`/api/notifications/${notificationId}/read`, {
+  const result = await apiRequest<object>(`/api/notifications/${notificationId}/read`, {
     method: "PUT",
   });
+  invalidateCache("/api/notifications");
+  return result;
 }
 
 export async function getDepartmentsRequest() {
@@ -353,6 +415,31 @@ export async function getDepartmentsRequest() {
 
 export async function getCategoriesRequest() {
   return apiRequest<CategoryDto[]>("/api/categories");
+}
+
+export interface UpdateTicketPayload {
+  title: string;
+  description: string;
+  priority: string;
+  departmentId: string;
+  categoryId: string;
+}
+
+export async function updateTicketRequest(ticketId: string, payload: UpdateTicketPayload) {
+  const result = await apiRequest<TicketResponseDto>(`/api/tickets/${ticketId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  invalidateCache("/api/tickets");
+  return result;
+}
+
+export async function deleteTicketRequest(ticketId: string) {
+  const result = await apiRequest<object>(`/api/tickets/${ticketId}`, {
+    method: "DELETE",
+  });
+  invalidateCache("/api/tickets");
+  return result;
 }
 
 export interface CreateTicketPayload {
@@ -372,7 +459,7 @@ export async function createTicketRequest(payload: CreateTicketPayload) {
   formData.append("DepartmentId", payload.departmentId);
   formData.append("CategoryId", payload.categoryId);
   if (payload.attachment) {
-    formData.append("Attachment", payload.attachment);
+    formData.append("attachment", payload.attachment);
   }
 
   const token = getToken();
@@ -403,5 +490,6 @@ export async function createTicketRequest(payload: CreateTicketPayload) {
     throw new Error("Empty response from server");
   }
 
+  invalidateCache("/api/tickets");
   return body.data;
 }

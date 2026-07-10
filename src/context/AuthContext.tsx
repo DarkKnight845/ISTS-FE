@@ -1,6 +1,7 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { getRoleFromJwt, getUserIdFromJwt, type UserRole } from '@/lib/jwt';
-import { setToken } from '@/lib/api';
+export type { UserRole } from '@/lib/jwt';
+import { isTokenExpired, setToken } from '@/lib/api';
 
 interface AuthContextValue {
   role: UserRole | null;
@@ -18,18 +19,17 @@ const TOKEN_STORAGE_KEY = 'ists_access_token';
 
 function getInitialAuth(): { role: UserRole | null; token: string | null; userId: string | null } {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  const storedRole = localStorage.getItem(ROLE_STORAGE_KEY);
 
-  if (token) {
+  if (token && !isTokenExpired(token)) {
     const roleFromJwt = getRoleFromJwt(token);
     if (roleFromJwt) {
       return { role: roleFromJwt, token, userId: getUserIdFromJwt(token) };
     }
   }
 
-  if (storedRole === 'staff' || storedRole === 'agent' || storedRole === 'manager' || storedRole === 'admin') {
-    return { role: storedRole as UserRole, token, userId: token ? getUserIdFromJwt(token) : null };
-  }
+  // Clear stale storage if token is missing/expired or role is invalid.
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(ROLE_STORAGE_KEY);
 
   return { role: null, token: null, userId: null };
 }
@@ -61,6 +61,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const userId = useMemo(() => (token ? getUserIdFromJwt(token) : null), [token]);
+
+  useEffect(() => {
+    if (token && isTokenExpired(token)) {
+      logout();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      logout();
+      window.location.href = "/login";
+    };
+    window.addEventListener("ists:auth:expired", handleAuthExpired);
+    return () => window.removeEventListener("ists:auth:expired", handleAuthExpired);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ role, token, userId, isAuthenticated: token !== null, login, logout }}>

@@ -227,7 +227,7 @@ function AgentDashboardPage() {
 
 function mapBackendTicket(ticket: TicketResponseDto): Ticket {
   const statusMap: Record<string, Ticket['status']> = {
-    Active: 'Active',
+    Active: 'Open',
     Ongoing: 'Ongoing',
     Resolved: 'Resolved',
     Closed: 'Closed',
@@ -251,10 +251,12 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     backendId: ticket.id,
     subject: ticket.title,
     department: ticket.departmentName || '—',
+    departmentId: ticket.departmentId,
     category: ticket.categoryName || '—',
+    categoryId: ticket.categoryId,
     requester: ticket.createdByName || 'Unknown',
     requesterId: ticket.createdById,
-    status: statusMap[ticket.status] || 'Active',
+    status: statusMap[ticket.status] || 'Open',
     priority: priorityMap[ticket.priority] || 'Medium',
     assigned: ticket.assignedAgentName || null,
     updatedAt: ticket.isBreached && ticket.overdueBy ? `Overdue by ${ticket.overdueBy}` : formatDate(ticket.updatedAt),

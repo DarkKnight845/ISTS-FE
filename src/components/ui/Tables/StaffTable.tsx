@@ -13,29 +13,28 @@ import {
   useTheme,
 } from "@mui/material";
 
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import ImportExportIcon from "@mui/icons-material/ImportExport";
-import { MoreIcon } from "@/components/icons";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import type { Ticket, TicketStatus } from "@/components/ui/types/ticket";
 
 
 type StaffTableProps = {
   tickets: Ticket[];
   onRowClick?: (ticket: Ticket) => void;
+  onEdit?: (ticket: Ticket) => void;
+  onDelete?: (ticket: Ticket) => void;
 };
 
 const statusStyles: Record<TicketStatus, { bg: string; color: string; border: string }> = {
   Open: { bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
-  InProgress: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
+  Ongoing: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
   Resolved: { bg: '#D1FAE5', color: '#047857', border: '#6EE7B7' },
   Closed: { bg: '#E5E7EB', color: '#374151', border: '#D1D5DB' },
   Waiting: { bg: '#D7EBFF', color: '#1565C0', border: '#1565C0' },
-  Active: { bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
-  Ongoing: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
 };
 const formatTicketId = (id: string): string => `TKT-${id.slice(0, 3).toUpperCase()}`;
 
-function StaffTable({ tickets, onRowClick }: StaffTableProps) {
+function StaffTable({ tickets, onRowClick, onEdit, onDelete }: StaffTableProps) {
   const theme = useTheme();
 
   return (
@@ -84,16 +83,7 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
                 fontSize: 13,
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: .5,
-                }}
-              >
-                CATEGORY
-                <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
-              </Box>
+              CATEGORY
             </TableCell>
 
             <TableCell
@@ -103,16 +93,7 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
                 fontSize: 13,
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: .5,
-                }}
-              >
-                STATUS
-                <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
-              </Box>
+              STATUS
             </TableCell>
 
             <TableCell
@@ -122,16 +103,7 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
                 fontSize: 13,
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: .5,
-                }}
-              >
-                TIME UPDATED
-                <ImportExportIcon sx={{ fontSize: 15 }} />
-              </Box>
+              TIME UPDATED
             </TableCell>
 
             <TableCell
@@ -153,6 +125,7 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
 
           {tickets.map((ticket) => {
             const status = statusStyles[ticket.status];
+            const isCompleted = ticket.status === 'Resolved' || ticket.status === 'Closed';
             return (
               <TableRow
                 key={ticket.id}
@@ -214,9 +187,29 @@ function StaffTable({ tickets, onRowClick }: StaffTableProps) {
                 </TableCell>
 
                 <TableCell align="center">
-                  <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                    <MoreIcon size={18} />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                    <IconButton
+                      size="small"
+                      disabled={isCompleted}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit?.(ticket);
+                      }}
+                      sx={{ color: isCompleted ? 'action.disabled' : 'text.secondary' }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete?.(ticket);
+                      }}
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      <DeleteOutlineOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </TableCell>
               </TableRow>
             );

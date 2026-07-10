@@ -31,9 +31,10 @@ const priorityTextColors: Record<string, string> = {
 };
 
 const statusTextColors: Record<string, string> = {
-  Active: '#1E40AF',
+  Open: '#1E40AF',
   Ongoing: '#7C3AED',
   Resolved: '#047857',
+  Closed: '#374151',
 };
 
 function TicketDetailDrawer({ open, ticket, onClose, onReassign }: TicketDetailDrawerProps) {
@@ -124,8 +125,43 @@ function TicketDetailDrawer({ open, ticket, onClose, onReassign }: TicketDetailD
               Description
             </Typography>
             <Typography variant="body2" sx={{ mt: '6px', color: 'text.primary', fontSize: '14px', lineHeight: 1.6 }}>
-              {ticket.description}
+              {ticket.description || 'No description provided.'}
             </Typography>
+
+            {ticket.attachmentUrl && (
+              <Box sx={{ mt: 2 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mb: 1,
+                    color: 'text.secondary',
+                  }}
+                >
+                  Attachment
+                </Typography>
+                <Box
+                  component="img"
+                  src={ticket.attachmentUrl}
+                  alt="Ticket attachment"
+                  onClick={() => {
+                    if (ticket.attachmentUrl) window.open(ticket.attachmentUrl, '_blank');
+                  }}
+                  sx={{
+                    width: '100%',
+                    maxHeight: 260,
+                    objectFit: 'cover',
+                    borderRadius: '10px',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      opacity: 0.95,
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </Box>
 
           <Box sx={{ mt: 'auto', pt: 3 }}>

@@ -1,8 +1,13 @@
-import { Box, Button, Typography } from "@mui/material";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { CalendarIcon } from "@/components/icons";
+import { Box, Typography } from "@mui/material";
+import DateRangeFilter from "@/components/DateRangeFilter";
 
-function DashboardHeader() {
+interface DashboardHeaderProps {
+  start?: string;
+  end?: string;
+  onDateChange?: (start: string, end: string) => void;
+}
+
+function DashboardHeader({ start = '', end = '', onDateChange }: DashboardHeaderProps) {
   return (
     <Box
       sx={{
@@ -10,7 +15,6 @@ function DashboardHeader() {
         justifyContent: "space-between",
         alignItems: "center",
         mb: 4,
-       
       }}
     >
       {/* Left Section */}
@@ -36,28 +40,9 @@ function DashboardHeader() {
       </Box>
 
       {/* Right Section */}
-      <Button
-        variant="outlined"
-        startIcon={<CalendarIcon size={18} color="currentColor" />}
-        endIcon={<KeyboardArrowDownIcon />}
-        sx={{
-          textTransform: "none",
-          borderColor: "divider",
-          color: "text.secondary",
-          borderRadius: 2,
-          px: 2,
-          py: 1,
-          backgroundColor: "background.paper",
-          fontWeight: 500,
-
-          "&:hover": {
-            borderColor: "divider",
-            backgroundColor: "action.hover",
-          },
-        }}
-      >
-        1 Apr - 31 Apr 2026
-      </Button>
+      {onDateChange && (
+        <DateRangeFilter start={start} end={end} onChange={onDateChange} />
+      )}
     </Box>
   );
 }

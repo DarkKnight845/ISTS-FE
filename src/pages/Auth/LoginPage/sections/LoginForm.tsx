@@ -8,6 +8,7 @@ import {
   Link,
   TextField,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const theme = useTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,12 +54,13 @@ function LoginForm() {
         alignItems: "center",
         flexDirection: "column",
         gap: "20px",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: 'background.paper',
         padding: { xs: "30px 20px" },
         mt: { xs: "-50px", sm: "-30px" },
+        borderRadius: { xs: '24px 24px 0 0', md: 0 },
       }}
     >
-      <Typography variant="h5" sx={{ mb: 3, color: "#1B1C1F", fontWeight: 600, fontFamily: "inherit" }}>
+      <Typography variant="h5" sx={{ mb: 3, color: 'text.primary', fontWeight: 600, fontFamily: "inherit" }}>
         Log in to your account.
       </Typography>
       <form onSubmit={handleSubmit} style={{ width: "100%" }}>
@@ -78,11 +81,13 @@ function LoginForm() {
               },
               fontWeight: "400",
               borderRadius: "8px",
-              backgroundColor: "#082A4B08",
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(8, 42, 75, 0.03)',
               border: "none",
+              color: 'text.primary',
 
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
+                color: 'text.primary',
 
                 "& fieldset": {
                   border: "none",
@@ -94,6 +99,11 @@ function LoginForm() {
 
                 "&.Mui-focused fieldset": {
                   border: "none",
+                },
+
+                "& input::placeholder": {
+                  color: 'text.secondary',
+                  opacity: 0.7,
                 },
               },
             }}
@@ -110,15 +120,16 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             sx={{
               borderRadius: "12px",
-              color: "#082A4B99",
+              color: 'text.secondary',
               border: "none",
               fontFamily: "inherit",
-              backgroundColor: "#082A4B08",
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(8, 42, 75, 0.03)',
               fontSize: "16px",
               fontWeight: "400",
 
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
+                color: 'text.primary',
 
                 "& fieldset": {
                   border: "none",
@@ -131,6 +142,11 @@ function LoginForm() {
                 "&.Mui-focused fieldset": {
                   border: "none",
                 },
+
+                "& input::placeholder": {
+                  color: 'text.secondary',
+                  opacity: 0.7,
+                },
               },
             }}
           />
@@ -139,7 +155,7 @@ function LoginForm() {
             href="/forgot-password"
             underline="hover"
             sx={{
-              color: "#2559AA",
+              color: 'primary.main',
               fontFamily: "inherit",
               fontSize: {
                 xs: "10px",
@@ -160,7 +176,7 @@ function LoginForm() {
           <Typography
             variant="body2"
             sx={{
-              color: "#DC2626",
+              color: 'error.main',
               fontSize: "13px",
               mb: 3,
               textAlign: "center",
@@ -176,14 +192,17 @@ function LoginForm() {
           type="submit"
           loading={loading}
           sx={{
-            backgroundColor: "#2559AA",
-            color: "#fff",
+            backgroundColor: 'primary.main',
+            color: 'primary.contrastText',
             borderRadius: "8px",
             fontFamily: "inherit",
             fontSize: { xs: "13px", sm: "20px" },
             fontWeight: 500,
             width: "450px",
             padding: ".6rem",
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
           }}
         >
           Log in

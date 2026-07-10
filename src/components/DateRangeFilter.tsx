@@ -26,6 +26,7 @@ function DateRangeFilter({ start = '', end = '', onChange }: DateRangeFilterProp
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [draftStart, setDraftStart] = useState(start);
   const [draftEnd, setDraftEnd] = useState(end);
+  const hasSelection = Boolean(start || end);
 
   const open = Boolean(anchorEl);
 
@@ -59,8 +60,8 @@ function DateRangeFilter({ start = '', end = '', onChange }: DateRangeFilterProp
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          px: 2,
+          gap: hasSelection ? 1 : 0,
+          px: hasSelection ? 2 : 1.5,
           py: 1,
           border: `1px solid ${theme.palette.divider}`,
           borderRadius: '10px',
@@ -71,9 +72,11 @@ function DateRangeFilter({ start = '', end = '', onChange }: DateRangeFilterProp
         }}
       >
         <CalendarIcon size={16} color="currentColor" />
-        <Typography variant="body2" sx={{ fontSize: 14 }}>
-          {formatLabel(start, end)}
-        </Typography>
+        {hasSelection && (
+          <Typography variant="body2" sx={{ fontSize: 14 }}>
+            {formatLabel(start, end)}
+          </Typography>
+        )}
       </Box>
 
       <Popover

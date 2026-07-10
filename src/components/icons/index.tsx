@@ -1,5 +1,6 @@
 import { Box, type SxProps, type Theme } from '@mui/material';
 import ticketStatSrc from '@/assets/icons/ion_ticket_stat.svg';
+import ticketBlueSrc from '@/assets/icons/ion_ticket_blue.svg';
 import ticketOrangeSrc from '@/assets/icons/ion_ticket_orange.svg';
 import ticketGreenSrc from '@/assets/icons/ion_ticket_green.svg';
 import ticketRedSrc from '@/assets/icons/ion_ticket_red.svg';
@@ -45,6 +46,10 @@ export function TicketResolvedIcon({ size = 25 }: IconProps) {
 
 export function TicketUrgentIcon({ size = 25 }: IconProps) {
   return <Box component="img" src={ticketRedSrc} alt="Urgent" sx={{ width: size, height: size, display: 'block' }} />;
+}
+
+export function TicketBlueIcon({ size = 25 }: IconProps) {
+  return <Box component="img" src={ticketBlueSrc} alt="Ticket" sx={{ width: size, height: size, display: 'block' }} />;
 }
 
 // Common line-art icons using currentColor so they adapt to theme.
@@ -212,4 +217,31 @@ export const MoonIcon = svgIcon(
     strokeLinejoin="round"
     fill="none"
   />
+);
+
+export const ClockIcon = svgIcon(
+  '0 0 24 24',
+  <>
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </>
+);
+
+export const ShieldIcon = svgIcon(
+  '0 0 24 24',
+  <path
+    d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+);
+
+export const ChartIcon = svgIcon(
+  '0 0 24 24',
+  <>
+    <path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </>
 );

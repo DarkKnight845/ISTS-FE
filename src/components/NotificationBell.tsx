@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge, IconButton, Menu, MenuItem, Typography, Box, CircularProgress, useTheme } from '@mui/material';
 import { useNotifications } from '@/hooks/useNotifications';
+import type { NotificationDto } from '@/lib/api';
 
 interface NotificationBellProps {
   icon: React.ReactNode;
@@ -8,6 +10,7 @@ interface NotificationBellProps {
 
 function NotificationBell({ icon }: NotificationBellProps) {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead } = useNotifications();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -19,9 +22,12 @@ function NotificationBell({ icon }: NotificationBellProps) {
     setAnchorEl(null);
   };
 
-  const handleClick = async (id: string) => {
-    await markAsRead(id);
+  const handleClick = async (notification: NotificationDto) => {
+    await markAsRead(notification.id);
     handleClose();
+    if (notification.ticketId) {
+      navigate(`/tickets/${notification.ticketId}`);
+    }
   };
 
   return (
@@ -67,7 +73,7 @@ function NotificationBell({ icon }: NotificationBellProps) {
           notifications.map((n) => (
             <MenuItem
               key={n.id}
-              onClick={() => handleClick(n.id)}
+              onClick={() => handleClick(n)}
               sx={{
                 px: 2,
                 py: 1.5,

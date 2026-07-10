@@ -104,7 +104,7 @@ function FilterBar({
           </Typography>
           <Select value={status} onChange={(e: SelectChangeEvent) => onStatusChange(e.target.value)} sx={selectSx}>
             <MenuItem value="All">All</MenuItem>
-            <MenuItem value="Active">Active</MenuItem>
+            <MenuItem value="Open">Open</MenuItem>
             <MenuItem value="Ongoing">Ongoing</MenuItem>
             <MenuItem value="Resolved">Resolved</MenuItem>
           </Select>

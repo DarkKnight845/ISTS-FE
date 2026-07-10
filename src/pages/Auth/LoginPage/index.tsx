@@ -1,9 +1,12 @@
-import { Box} from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { istsIcon } from "@/assets/img";
 import LoginForm from "./sections/LoginForm";
 import ionTicket from '@/assets/icons/ion_ticket.svg'
 
 function LoginPage() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   return (
     <Box
       sx={{
@@ -12,35 +15,45 @@ function LoginPage() {
         height: "100vh",
         width: "100%",
         position: "relative",
-        // alignContent: 'flex-start',
+        backgroundColor: 'background.default',
       }}
     >
       <Box
         sx={{
           flex: 1,
-          backgroundColor: "#2559AA",
+          backgroundColor: 'primary.main',
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
-          width: "50%",
+          width: { xs: '100%', md: "50%" },
+          minHeight: { xs: '40vh', md: '100vh' },
         }}
       >
-          <Box component='img' src={ionTicket}></Box>
+          <Box
+            component="img"
+            src={ionTicket}
+            alt="ISTS ticket"
+            sx={{
+              width: { xs: 180, sm: 260, md: 320 },
+              height: 'auto',
+              opacity: isDark ? 0.85 : 1,
+            }}
+          />
         <Box
           sx={{
             position: "absolute",
-            top: -43,
+            top: { xs: -30, md: -43 },
             left: 16,
           }}
         >
           <Box
             component="img"
             src={istsIcon}
-            alt="HCMS Logo"
+            alt="ISTS Logo"
             sx={{
-              height: "160px",
-              width: "160px",
+              height: { xs: 120, md: 160 },
+              width: { xs: 120, md: 160 },
             }}
           />
         </Box>
@@ -48,8 +61,9 @@ function LoginPage() {
 
       <Box
         sx={{
-          width: "50%",
-          alignSelf:'center'
+          width: { xs: '100%', md: "50%" },
+          alignSelf: 'center',
+          backgroundColor: 'background.default',
         }}
       >
         <LoginForm />

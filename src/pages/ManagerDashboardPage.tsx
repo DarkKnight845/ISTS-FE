@@ -17,22 +17,31 @@ import { getAgentsRequest, assignTicketRequest, getBreachedTicketsRequest, type 
 function ManagerDashboardPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('All');
+  const [priority, setPriority] = useState('All');
+  const [assignedTo, setAssignedTo] = useState('All');
+
+  const statusBackendMap: Record<string, string | undefined> = {
+    All: undefined,
+    Open: 'Open',
+    Ongoing: 'Ongoing',
+    Resolved: 'Resolved',
+  };
+
   const filters = useMemo(
     () => ({
       fromDate: fromDate || undefined,
       toDate: toDate || undefined,
+      status: statusBackendMap[status],
     }),
-    [fromDate, toDate]
+    [fromDate, toDate, status]
   );
 
   const { tickets: backendTickets, loading: ticketsLoading, error: ticketsError, refetch } = useTickets(filters);
   const { analytics } = useTicketAnalytics();
 
   const [breachedTickets, setBreachedTickets] = useState<ManagerTicket[]>([]);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('All');
-  const [priority, setPriority] = useState('All');
-  const [assignedTo, setAssignedTo] = useState('All');
 
   const [selectedTicket, setSelectedTicket] = useState<ManagerTicket | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -77,11 +86,11 @@ function ManagerDashboardPage() {
 
   const stats = useMemo(() => {
     const openTickets = tickets.filter(
-      (t) => t.status === 'Active' || t.status === 'Ongoing'
+      (t) => t.status === 'Open' || t.status === 'Ongoing'
     ).length;
     const resolved = tickets.filter((t) => t.status === 'Resolved').length;
     const unassigned = tickets.filter(
-      (t) => !t.assigned && t.status !== 'Resolved'
+      (t) => !t.assigned && t.status !== 'Resolved' && t.status !== 'Closed'
     ).length;
     const slaBreaches = breachedTickets.length;
     const slaCompliance = analytics?.slaCompliancePercentage ?? 100;
@@ -337,10 +346,10 @@ function ManagerDashboardPage() {
 
 function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTicket {
   const statusMap: Record<string, ManagerTicket['status']> = {
-    Active: 'Active',
+    Active: 'Open',
     Ongoing: 'Ongoing',
     Resolved: 'Resolved',
-    Closed: 'Resolved',
+    Closed: 'Closed',
   };
 
   const priorityMap: Record<string, ManagerTicket['priority']> = {
@@ -372,7 +381,7 @@ function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTic
     requester,
     requesterId: ticket.createdById,
     requesterInitials,
-    status: statusMap[ticket.status] || 'Active',
+    status: statusMap[ticket.status] || 'Open',
     priority: priorityMap[ticket.priority] || 'Medium',
     assigned: ticket.assignedAgentName || null,
     updatedAt: ticket.isBreached && ticket.overdueBy ? `Overdue by ${ticket.overdueBy}` : formatDate(updatedDate),
@@ -382,6 +391,7 @@ function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTic
     isBreach: ticket.isBreached,
     isRated: ticket.isRated,
     overdueBy: ticket.overdueBy || undefined,
+    attachmentUrl: ticket.attachmentUrl || null,
   };
 }
 

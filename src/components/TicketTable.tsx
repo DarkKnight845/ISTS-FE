@@ -8,19 +8,10 @@ import {
   TableRow,
   Paper,
   Chip,
-  IconButton,
   Typography,
   useTheme,
 } from '@mui/material';
 import type { Ticket, TicketPriority, TicketStatus } from '@/components/ui/types/ticket';
-import { MoreIcon } from './icons';
-
-const SortIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M7 16V4M7 4L4 7M7 4L10 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17 8V20M17 20L14 17M17 20L20 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 interface TicketTableProps {
   tickets: Ticket[];
@@ -28,11 +19,9 @@ interface TicketTableProps {
 }
 
 const statusStyles: Record<TicketStatus, { bg: string; color: string; border: string }> = {
-  Active: { bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
-  Resolved: { bg: '#D1FAE5', color: '#047857', border: '#6EE7B7' },
-  Ongoing: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
   Open: { bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
-  InProgress: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
+  Ongoing: { bg: '#FEF3C7', color: '#B45309', border: '#FCD34D' },
+  Resolved: { bg: '#D1FAE5', color: '#047857', border: '#6EE7B7' },
   Closed: { bg: '#E5E7EB', color: '#374151', border: '#D1D5DB' },
   Waiting: { bg: '#D7EBFF', color: '#1565C0', border: '#1565C0' },
 };
@@ -78,17 +67,11 @@ function TicketTable({ tickets, onSelect }: TicketTableProps) {
       <Table size="small">
         <TableHead sx={{ backgroundColor: 'action.hover' }}>
           <TableRow>
-            <TableCell sx={headSx}>ID &amp; Subject</TableCell>
+            <TableCell sx={headSx}>ID & Subject</TableCell>
             <TableCell align="center" sx={headSx}>Status</TableCell>
             <TableCell align="center" sx={headSx}>Priority</TableCell>
             <TableCell align="center" sx={headSx}>Assigned</TableCell>
-            <TableCell align="center" sx={headSx}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                Time Updated
-                <SortIcon />
-              </Box>
-            </TableCell>
-            <TableCell align="right" sx={headSx}>Actions</TableCell>
+            <TableCell align="center" sx={headSx}>Time Updated</TableCell>
           </TableRow>
         </TableHead>
 
@@ -159,18 +142,6 @@ function TicketTable({ tickets, onSelect }: TicketTableProps) {
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     {ticket.updatedAt}
                   </Typography>
-                </TableCell>
-
-                <TableCell align="right" sx={cellSx}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: '8px', color: 'text.secondary' }}
-                  >
-                    <MoreIcon size={18} />
-                  </IconButton>
                 </TableCell>
               </TableRow>
             );

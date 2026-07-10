@@ -1,4 +1,4 @@
-export type TicketStatus = "Open" | "InProgress" | "Resolved" | "Closed" | "Waiting" | "Active" | "Ongoing";
+export type TicketStatus = "Open" | "Ongoing" | "Resolved" | "Closed" | "Waiting";
 export type TicketPriority = "Low" | "Medium" | "High" | "Critical" | "Urgent";
 
 export type Ticket = {
@@ -6,7 +6,9 @@ export type Ticket = {
   backendId: string;
   subject: string;
   department: string;
+  departmentId: string;
   category: string;
+  categoryId: string;
   description: string;
   priority: TicketPriority;
   status: TicketStatus;

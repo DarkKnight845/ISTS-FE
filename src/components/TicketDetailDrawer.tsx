@@ -136,7 +136,7 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
     ticket?.backendId ?? null
   );
 
-  const needsAccept = canAccept && ticket?.status === 'Active';
+  const needsAccept = canAccept && ticket?.status === 'Open';
   const isChatEnabled = !needsAccept;
 
   useEffect(() => {
@@ -229,7 +229,7 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
     setActionError(null);
     try {
       await escalateTicketRequest(ticket.backendId);
-      const updated: Ticket = { ...ticket, status: 'Active', assigned: null };
+      const updated: Ticket = { ...ticket, status: 'Open', assigned: null };
       onTicketUpdated?.(updated);
       setEscalateDialogOpen(false);
     } catch (err) {

@@ -18,9 +18,9 @@ type StaffToolbarProps = {
   onRaiseTicket: () => void;
 };
 
-export type StaffFilter = "All" | "Ongoing" | "Waiting" | "Completed";
+export type StaffFilter = "All" | "Open" | "Waiting" | "Resolved";
 
-const FILTERS: StaffFilter[] = ["All", "Ongoing", "Waiting", "Completed"];
+const FILTERS: StaffFilter[] = ["All", "Open", "Waiting", "Resolved"];
 
 function StaffToolbar({
   activeFilter,

@@ -1,4 +1,4 @@
-export type ManagerTicketStatus = 'Active' | 'Resolved' | 'Ongoing';
+export type ManagerTicketStatus = 'Open' | 'Resolved' | 'Ongoing' | 'Closed';
 export type ManagerTicketPriority = 'Urgent' | 'High' | 'Medium' | 'Low';
 
 export interface ManagerTicket {
@@ -18,5 +18,6 @@ export interface ManagerTicket {
   isBreach: boolean;
   isRated?: boolean;
   overdueBy?: string;
+  attachmentUrl?: string | null;
 }
 

@@ -9,3 +9,5 @@ export const AgentDashboardPage = lazy(() => import("@/pages/AgentDashboardPage"
 export const StaffDashboardPage = lazy(() => import("@/pages/MainPages/staffDashboard"));
 export const ManagerDashboardPage = lazy(() => import("@/pages/ManagerDashboardPage"));
 export const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
+export const LandingPage = lazy(() => import("@/pages/LandingPage"));
+export const TicketDetailPage = lazy(() => import("@/pages/TicketDetailPage"));

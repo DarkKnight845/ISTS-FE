@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { getTicketAnalyticsRequest, type TicketAnalyticsDto } from '@/lib/api';
 
+interface AnalyticsFilters {
+  fromDate?: string;
+  toDate?: string;
+}
+
 interface UseTicketAnalyticsResult {
   analytics: TicketAnalyticsDto | null;
   loading: boolean;
@@ -8,7 +13,7 @@ interface UseTicketAnalyticsResult {
   refetch: () => void;
 }
 
-export function useTicketAnalytics(): UseTicketAnalyticsResult {
+export function useTicketAnalytics(filters?: AnalyticsFilters): UseTicketAnalyticsResult {
   const [analytics, setAnalytics] = useState<TicketAnalyticsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +22,7 @@ export function useTicketAnalytics(): UseTicketAnalyticsResult {
     setLoading(true);
     setError(null);
     try {
-      const data = await getTicketAnalyticsRequest();
+      const data = await getTicketAnalyticsRequest(filters);
       setAnalytics(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
@@ -29,7 +34,7 @@ export function useTicketAnalytics(): UseTicketAnalyticsResult {
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [filters?.fromDate, filters?.toDate]);
 
   return { analytics, loading, error, refetch: fetchAnalytics };
 }

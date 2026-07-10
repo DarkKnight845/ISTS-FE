@@ -1,7 +1,7 @@
 import { Box, Avatar, Chip, Typography } from '@mui/material';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import NotificationBell from '@/components/NotificationBell';
-import { BellIcon, CalendarIcon } from '@/components/icons';
+import { BellIcon } from '@/components/icons';
 
 function Header() {
   const { user } = useCurrentUser();
@@ -28,26 +28,6 @@ function Header() {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 1,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '10px',
-            backgroundColor: 'background.paper',
-            color: 'text.secondary',
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          <CalendarIcon size={16} />
-          Apr 1 - Apr 7, 2026
-        </Box>
-
         <Chip
           label={department}
           sx={{

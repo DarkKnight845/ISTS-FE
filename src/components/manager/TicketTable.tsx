@@ -36,12 +36,14 @@ function TicketTable({ tickets, onRowClick }: TicketTableProps) {
 
   const statusStyles = (status: string) => {
     switch (status) {
-      case 'Active':
+      case 'Open':
         return { bg: '#DBEAFE', color: '#1D4ED8' };
       case 'Ongoing':
         return { bg: '#FEF3C7', color: '#D97706' };
       case 'Resolved':
         return { bg: '#D1FAE5', color: '#047857' };
+      case 'Closed':
+        return { bg: '#E5E7EB', color: '#374151' };
       default:
         return { bg: theme.palette.action.hover, color: theme.palette.text.primary };
     }

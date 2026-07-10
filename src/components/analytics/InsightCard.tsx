@@ -1,5 +1,4 @@
 import { Box, Card, Typography, useTheme } from '@mui/material';
-import { TrendUpIcon, TrendDownIcon } from '@/components/icons';
 import type { Insight } from '@/data/mockAnalytics';
 
 interface InsightCardProps {
@@ -8,7 +7,6 @@ interface InsightCardProps {
 
 function InsightCard({ insight }: InsightCardProps) {
   const theme = useTheme();
-  const changeColor = insight.changeUp ? theme.palette.success.main : theme.palette.error.main;
   return (
     <Card
       sx={{
@@ -40,14 +38,12 @@ function InsightCard({ insight }: InsightCardProps) {
           {insight.value}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mt: '8px' }}>
-          <Box sx={{ color: changeColor }}>
-            {insight.changeUp ? <TrendUpIcon size={12} /> : <TrendDownIcon size={12} />}
-          </Box>
-          <Typography variant="caption" sx={{ color: changeColor, fontWeight: 500, fontSize: '12px' }}>
-            {insight.change}
-          </Typography>
-        </Box>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '12px', display: 'block', mt: '8px' }}
+        >
+          {insight.change}
+        </Typography>
       </Box>
     </Card>
   );

@@ -2,7 +2,7 @@ import StatCard from './StatCard';
 import {
   TicketSubmittedIcon,
   TicketResolvedIcon,
-  TicketUrgentIcon,
+  TicketBlueIcon,
   RatingIcon,
 } from '@/components/icons';
 
@@ -35,16 +35,14 @@ function StatsCardGrid({
     {
       title: 'Assigned to me',
       value: assignedToMe ?? 0,
-      trend: `${assignedToMe ?? 0} ticket${(assignedToMe ?? 0) === 1 ? '' : 's'} assigned to you`,
-      trendUp: true,
+      trend: 'Tickets assigned to you',
       icon: <TicketSubmittedIcon size={20} />,
       iconBg: brandBlue,
     },
     {
       title: 'Resolved',
       value: resolved ?? 0,
-      trend: `${resolved ?? 0} ticket${(resolved ?? 0) === 1 ? '' : 's'} you resolved`,
-      trendUp: true,
+      trend: 'Tickets you resolved',
       icon: <TicketResolvedIcon size={20} />,
       iconBg: '#86EFAC',
     },
@@ -52,19 +50,17 @@ function StatsCardGrid({
       title: 'Average rating',
       value: ratingValue,
       trend: (totalRatings ?? 0) > 0
-        ? `${totalRatings ?? 0} rating${(totalRatings ?? 0) === 1 ? '' : 's'}`
-        : (averageRating != null && averageRating > 0 ? 'No rating count available' : 'No ratings yet'),
-      trendUp: averageRating != null && averageRating >= 4,
-      icon: <RatingIcon color={brandBlue} />,
-      iconBg: '#FEF08A',
+        ? `${totalRatings ?? 0} total rating${(totalRatings ?? 0) === 1 ? '' : 's'}`
+        : 'No ratings yet',
+      icon: <RatingIcon color="#D97706" size={20} />,
+      iconBg: '#FEF3C7',
     },
     {
       title: 'Unassigned',
       value: unassigned ?? 0,
-      trend: `${unassigned ?? 0} open ticket${(unassigned ?? 0) === 1 ? '' : 's'} awaiting agent`,
-      trendUp: (unassigned ?? 0) === 0,
-      icon: <TicketUrgentIcon size={20} />,
-      iconBg: '#DBEAFE',
+      trend: 'Open tickets awaiting agent',
+      icon: <TicketBlueIcon size={20} />,
+      iconBg: '#FFFFFF',
     },
   ];
 
