@@ -1,12 +1,7 @@
 import { getCached, invalidateCache, setCached } from "./cache";
 import { decodeJwt } from "./jwt";
 
-const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) || "";
-if (!rawApiBaseUrl) {
-  throw new Error("VITE_API_BASE_URL is not defined. Set it in .env.production before building.");
-}
-
-export const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5011").replace(/\/$/, "");
 export const SIGNALR_BASE_URL = ((import.meta.env.VITE_SIGNALR_BASE_URL as string | undefined) || API_BASE_URL).replace(/\/$/, "");
 
 export interface ApiResponse<T> {
