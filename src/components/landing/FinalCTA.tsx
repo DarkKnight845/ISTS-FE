@@ -1,9 +1,6 @@
-import { Box, Button, Container, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Container, Typography } from '@mui/material';
 
 function FinalCTA() {
-  const navigate = useNavigate();
-
   return (
     <Box
       sx={{
@@ -63,33 +60,12 @@ function FinalCTA() {
             opacity: 0.9,
             maxWidth: 560,
             mx: 'auto',
-            mb: 4,
             lineHeight: 1.7,
           }}
         >
           Join staff, agents, and managers already using ISTS to turn support requests into fast, measurable resolutions.
         </Typography>
 
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => navigate('/login')}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 700,
-            fontSize: '16px',
-            borderRadius: '12px',
-            px: 5,
-            py: 1.5,
-            backgroundColor: '#fff',
-            color: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            },
-          }}
-        >
-          Log in to ISTS
-        </Button>
       </Container>
     </Box>
   );

@@ -1,7 +1,10 @@
 import { Box, Button, Container, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ionTicket from '@/assets/icons/ion_ticket.svg';
 
 function HeroSection() {
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
@@ -64,7 +67,7 @@ function HeroSection() {
                 display: 'block',
               }}
             >
-              INTELLIGENT SUPPORT TICKETING SYSTEM
+              INTERNAL SUPPORT TICKETING SYSTEM
             </Typography>
 
             <Typography
@@ -105,6 +108,21 @@ function HeroSection() {
                 justifyContent: { xs: 'center', md: 'flex-start' },
               }}
             >
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/login')}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  borderRadius: '12px',
+                  px: 4,
+                  py: 1.5,
+                }}
+              >
+                Log in to ISTS
+              </Button>
               <Button
                 variant="outlined"
                 size="large"
