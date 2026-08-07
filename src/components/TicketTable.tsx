@@ -1,5 +1,6 @@
 import {
   Box,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -11,11 +12,19 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import type { Ticket, TicketPriority, TicketStatus } from '@/components/ui/types/ticket';
 
 interface TicketTableProps {
   tickets: Ticket[];
   onSelect: (ticket: Ticket) => void;
+  /** When provided, render an Edit button per row. */
+  onEdit?: (ticket: Ticket) => void;
+  /** When provided, render a Delete button per row. */
+  onDelete?: (ticket: Ticket) => void;
+  /** Predicate controlling whether Delete is enabled for a given row. */
+  canDelete?: (ticket: Ticket) => boolean;
 }
 
 const statusStyles: Record<TicketStatus, { bg: string; color: string; border: string }> = {
@@ -37,8 +46,9 @@ const priorityColors: Record<TicketPriority, string> = {
 /**
  * Ticket list table with status/priority styling and row selection.
  */
-function TicketTable({ tickets, onSelect }: TicketTableProps) {
+function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketTableProps) {
   const theme = useTheme();
+  const showActions = Boolean(onEdit || onDelete);
   const headSx = {
     color: theme.palette.text.secondary,
     fontWeight: 600,
@@ -72,6 +82,9 @@ function TicketTable({ tickets, onSelect }: TicketTableProps) {
             <TableCell align="center" sx={headSx}>Priority</TableCell>
             <TableCell align="center" sx={headSx}>Assigned</TableCell>
             <TableCell align="center" sx={headSx}>Time Updated</TableCell>
+            {showActions && (
+              <TableCell align="center" sx={headSx}>Actions</TableCell>
+            )}
           </TableRow>
         </TableHead>
 
@@ -143,6 +156,35 @@ function TicketTable({ tickets, onSelect }: TicketTableProps) {
                     {ticket.updatedAt}
                   </Typography>
                 </TableCell>
+
+                {showActions && (
+                  <TableCell align="center" sx={cellSx} onClick={(e) => e.stopPropagation()}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                      {onEdit && (
+                        <IconButton
+                          size="small"
+                          onClick={() => onEdit(ticket)}
+                          disabled={ticket.status === 'Resolved' || ticket.status === 'Closed'}
+                          sx={{ color: 'text.secondary' }}
+                          aria-label="Edit ticket"
+                        >
+                          <EditOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {onDelete && (
+                        <IconButton
+                          size="small"
+                          onClick={() => onDelete(ticket)}
+                          disabled={canDelete ? !canDelete(ticket) : false}
+                          sx={{ color: 'text.secondary' }}
+                          aria-label="Delete ticket"
+                        >
+                          <DeleteOutlineOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}

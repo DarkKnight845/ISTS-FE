@@ -1,17 +1,8 @@
-import {
-  Box,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  IconButton,
-} from '@mui/material';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { NavLink, useLocation } from 'react-router-dom';
 import { istsIcon } from '@/assets/img';
 import { useAuth } from '@/context/AuthContext';
-import { useThemeMode } from '@/context/ThemeContext';
-import { DashboardIcon, TicketIcon, AnalyticsIcon, SunIcon, MoonIcon, LogoutIcon } from '@/components/icons';
+import { DashboardIcon, TicketIcon, AnalyticsIcon } from '@/components/icons';
 
 interface NavItem {
   label: string;
@@ -35,131 +26,73 @@ function getNavItems(role: string | null): NavItem[] {
 }
 
 function Sidebar() {
-  const { role, logout } = useAuth();
-  const { mode, toggleMode } = useThemeMode();
+  const { role } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const navItems = getNavItems(role);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
-
     <>
+      <Box sx={{ width: 260, flexShrink: 0 }} />
+
       <Box
         sx={{
           width: 260,
           flexShrink: 0,
-        }}
-      />
-
-
-    <Box
-      sx={{
-        width: 260,
-        flexShrink: 0,
-        px: 2,
-        py: 3,
-        backgroundColor: 'primary.main',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        overflowY: 'auto',
-        margionRight: 2,
-      }}
-    >
-      <Box sx={{ mb: 4, px: 1 }}>
-        <Box
-          component="img"
-          src={istsIcon}
-          alt="ISTS Logo"
-          sx={{ height: 50, width: 'auto', display: 'block' }}
-        />
-      </Box>
-
-      <List sx={{ flexGrow: 1, overflowY: 'auto', px: 0 }}>
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <ListItemButton
-              key={item.path}
-              component={NavLink}
-              to={item.path}
-              sx={{
-                borderRadius: '8px',
-                mb: 1,
-                px: 1.5,
-                py: 1,
-                color: isActive ? 'primary.contrastText' : 'rgba(255,255,255,0.85)',
-                backgroundColor: isActive ? 'primary.dark' : 'transparent',
-                textDecoration: 'none',
-                '&:hover': {
-                  backgroundColor: isActive ? 'primary.dark' : 'rgba(255,255,255,0.1)',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>{item.icon}</ListItemIcon>
-              <ListItemText
-                primary={item.label}
-                slotProps={{
-                  primary: { sx: { fontSize: 14, fontWeight: isActive ? 600 : 500 } },
-                }}
-              />
-            </ListItemButton>
-          );
-        })}
-      </List>
-
-      <Box
-        sx={{
-          mt: 'auto',
-          pt: 2,
-          borderTop: '1px solid rgba(255,255,255,0.2)',
+          px: 2,
+          py: 3,
+          backgroundColor: 'primary.main',
+          height: '100vh',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          overflowY: 'auto',
         }}
       >
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
-          ISTS Portal v1.0
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton
-            onClick={toggleMode}
-            size="small"
-            sx={{
-              color: 'primary.contrastText',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
-            }}
-            title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            aria-label="Toggle theme"
-          >
-            {mode === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
-          </IconButton>
-          <IconButton
-            onClick={handleLogout}
-            size="small"
-            sx={{
-              color: 'primary.contrastText',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
-            }}
-            title="Log out"
-            aria-label="Log out"
-          >
-            <LogoutIcon size={18} />
-          </IconButton>
+        <Box sx={{ mb: 4, px: 1 }}>
+          <Box
+            component="img"
+            src={istsIcon}
+            alt="ISTS Logo"
+            sx={{ height: 50, width: 'auto', display: 'block' }}
+          />
         </Box>
+
+        <List sx={{ flexGrow: 1, overflowY: 'auto', px: 0 }}>
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <ListItemButton
+                key={item.path}
+                component={NavLink}
+                to={item.path}
+                sx={{
+                  borderRadius: '8px',
+                  mb: 1,
+                  px: 1.5,
+                  py: 1,
+                  color: isActive ? 'primary.contrastText' : 'rgba(255,255,255,0.85)',
+                  backgroundColor: isActive ? 'primary.dark' : 'transparent',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    backgroundColor: isActive ? 'primary.dark' : 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>{item.icon}</ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  slotProps={{
+                    primary: { sx: { fontSize: 14, fontWeight: isActive ? 600 : 500 } },
+                  }}
+                />
+              </ListItemButton>
+            );
+          })}
+        </List>
       </Box>
-    </Box>
-    </> 
+    </>
   );
 }
 

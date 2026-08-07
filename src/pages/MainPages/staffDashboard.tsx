@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -13,46 +13,42 @@ import {
   Select,
   TextField,
   Typography,
-} from "@mui/material";
-import StatCard from "@/components/ui/Cards/StatCard";
-import DashboardHeader from "@/components/ui/DahboardHeader";
-import StaffToolbar from "@/components/ui/Toolbar";
-import RaiseTicketModal from "@/components/ui/Modals/RaiseTicketModals";
-import StaffNavbar from "@/components/ui/Nabvar/StaffNavbar";
-import StaffTable from "@/components/ui/Tables/StaffTable";
-import TicketDetailDrawer from "@/components/TicketDetailDrawer";
-import {
-  TicketSubmittedIcon,
-  TicketInProgressIcon,
-  TicketResolvedIcon,
-  TicketUrgentIcon,
-} from "@/components/icons";
-import type { Ticket, TicketStatus } from "@/components/ui/types/ticket";
-import { useMyTickets } from "@/hooks/useMyTickets";
-import { useSignalR } from "@/hooks/useSignalR";
-import { useAuth } from "@/context/AuthContext";
-import type { TicketResponseDto, TicketMessageDto, NotificationDto, DepartmentDto } from "@/lib/api";
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import PageHeader from '@/components/layout/PageHeader';
+import StatsCardGrid from '@/components/StatsCardGrid';
+import TicketFilterBar from '@/components/TicketFilterBar';
+import TicketTable from '@/components/TicketTable';
+import DateRangeFilter from '@/components/DateRangeFilter';
+import RaiseTicketModal from '@/components/ui/Modals/RaiseTicketModals';
+import { useTicketDrawer } from '@/context/TicketDrawerContext';
+import type { Ticket, TicketStatus } from '@/components/ui/types/ticket';
+import { useMyTickets } from '@/hooks/useMyTickets';
+import { useSignalR } from '@/hooks/useSignalR';
+import type { TicketResponseDto, TicketMessageDto, NotificationDto, DepartmentDto } from '@/lib/api';
 import {
   createTicketRequest,
   deleteTicketRequest,
   updateTicketRequest,
   getDepartmentsRequest,
-} from "@/lib/api";
-import type { TicketFormData } from "@/components/ui/Modals/RaiseTicketForm";
+} from '@/lib/api';
+import type { TicketFormData } from '@/components/ui/Modals/RaiseTicketForm';
 
-const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
+type StaffFilter = 'All' | 'Open' | 'Waiting' | 'Resolved';
+
+const STAFF_FILTER_TABS: readonly StaffFilter[] = ['All', 'Open', 'Waiting', 'Resolved'];
+
+const PRIORITY_OPTIONS: readonly string[] = ['Low', 'Medium', 'High', 'Urgent'];
 
 function StaffDashboardPage() {
-  const { userId: currentUserId } = useAuth();
   const { tickets: backendTickets, loading, error, refetch } = useMyTickets();
-  const [openModal, setOpenModal] = useState(false);
+  const { openTicket } = useTicketDrawer();
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [filter, setFilter] = useState<"All" | "Open" | "Waiting" | "Resolved">("All");
-  const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [filter, setFilter] = useState<StaffFilter>('All');
+  const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
@@ -61,15 +57,17 @@ function StaffDashboardPage() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [ticketToEdit, setTicketToEdit] = useState<Ticket | null>(null);
-  const [editSubject, setEditSubject] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editPriority, setEditPriority] = useState("");
-  const [editDepartmentId, setEditDepartmentId] = useState("");
-  const [editCategoryId, setEditCategoryId] = useState("");
+  const [editSubject, setEditSubject] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPriority, setEditPriority] = useState('');
+  const [editDepartmentId, setEditDepartmentId] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState('');
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [raiseOpen, setRaiseOpen] = useState(false);
 
   useEffect(() => {
     if (backendTickets) {
@@ -78,49 +76,32 @@ function StaffDashboardPage() {
   }, [backendTickets]);
 
   const handleNewMessage = useCallback((message: TicketMessageDto) => {
-    if (selectedTicket?.backendId === message.ticketId) return;
-    refetch();
-  }, [refetch, selectedTicket?.backendId]);
+    // The drawer subscribes to its own ticket group, so messages for the
+    // currently-open ticket arrive in the drawer directly. Here we just
+    // refresh the list so counts / status stay current.
+    if (message.ticketId) {
+      refetch();
+    }
+  }, [refetch]);
 
   const handleNewNotification = useCallback((_notification: NotificationDto) => {
     // Notification handled by the notification system.
   }, []);
 
-  const { connection } = useSignalR({
+  // Page-level listener for cross-ticket updates. The connection itself
+  // is owned by TicketDrawerHost at the layout level.
+  useSignalR({
     onMessage: handleNewMessage,
     onNotification: handleNewNotification,
   });
 
   const stats = useMemo(() => {
     const submitted = tickets.length;
-    const ongoing = tickets.filter((t) => t.status === "Ongoing").length;
-    const open = tickets.filter((t) => t.status === "Open").length;
-    const resolved = tickets.filter((t) => t.status === "Resolved" || t.status === "Closed").length;
+    const ongoing = tickets.filter((t) => t.status === 'Ongoing').length;
+    const open = tickets.filter((t) => t.status === 'Open').length;
+    const resolved = tickets.filter((t) => t.status === 'Resolved' || t.status === 'Closed').length;
     return { submitted, ongoing, open, resolved };
   }, [tickets]);
-
-  const handleCreateTicket = async (data: TicketFormData) => {
-    await createTicketRequest({
-      title: data.subject,
-      description: data.description,
-      priority: data.priority,
-      departmentId: data.departmentId,
-      categoryId: data.categoryId,
-      attachment: data.attachment,
-    });
-    await refetch();
-    setOpenModal(false);
-  };
-
-  const handleSelectTicket = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-    setDrawerOpen(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setTimeout(() => setSelectedTicket(null), 250);
-  };
 
   const handleOpenDelete = (ticket: Ticket) => {
     setTicketToDelete(ticket);
@@ -144,7 +125,7 @@ function StaffDashboardPage() {
       setDeleteDialogOpen(false);
       setTimeout(() => setTicketToDelete(null), 250);
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete ticket");
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete ticket');
     } finally {
       setDeleteLoading(false);
     }
@@ -156,7 +137,7 @@ function StaffDashboardPage() {
       const data = await getDepartmentsRequest();
       setDepartments(data ?? []);
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : "Failed to load departments");
+      setEditError(err instanceof Error ? err.message : 'Failed to load departments');
     } finally {
       setDepartmentsLoading(false);
     }
@@ -179,11 +160,11 @@ function StaffDashboardPage() {
     setEditDialogOpen(false);
     setTimeout(() => {
       setTicketToEdit(null);
-      setEditSubject("");
-      setEditDescription("");
-      setEditPriority("");
-      setEditDepartmentId("");
-      setEditCategoryId("");
+      setEditSubject('');
+      setEditDescription('');
+      setEditPriority('');
+      setEditDepartmentId('');
+      setEditCategoryId('');
       setEditError(null);
     }, 250);
   };
@@ -192,23 +173,23 @@ function StaffDashboardPage() {
     if (!ticketToEdit) return;
 
     if (!editSubject.trim()) {
-      setEditError("Please enter a ticket subject.");
+      setEditError('Please enter a ticket subject.');
       return;
     }
     if (!editDepartmentId) {
-      setEditError("Please select a department.");
+      setEditError('Please select a department.');
       return;
     }
     if (!editCategoryId) {
-      setEditError("Please select a category.");
+      setEditError('Please select a category.');
       return;
     }
     if (!editDescription.trim()) {
-      setEditError("Please describe your issue.");
+      setEditError('Please describe your issue.');
       return;
     }
     if (!editPriority) {
-      setEditError("Please select a priority.");
+      setEditError('Please select a priority.');
       return;
     }
 
@@ -226,7 +207,7 @@ function StaffDashboardPage() {
       setEditDialogOpen(false);
       handleCloseEdit();
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : "Failed to update ticket");
+      setEditError(err instanceof Error ? err.message : 'Failed to update ticket');
     } finally {
       setEditLoading(false);
     }
@@ -259,209 +240,178 @@ function StaffDashboardPage() {
   }
 
   const filteredTickets = useMemo(() => {
+    let working = tickets;
+
+    if (filter !== 'All') {
+      working = working.filter((ticket) => {
+        switch (filter) {
+          case 'Open':
+            return ticket.status === 'Open';
+          case 'Waiting':
+            return ticket.status === 'Ongoing' || ticket.status === 'Waiting';
+          case 'Resolved':
+            return ticket.status === 'Resolved' || ticket.status === 'Closed';
+          default:
+            return true;
+        }
+      });
+    }
+
     const term = search.trim().toLowerCase();
-    return tickets.filter((ticket) => {
-      let matchesFilter = true;
-      switch (filter) {
-        case "Open":
-          matchesFilter = ticket.status === "Open";
-          break;
-        case "Waiting":
-          matchesFilter = ticket.status === "Ongoing" || ticket.status === "Waiting";
-          break;
-        case "Resolved":
-          matchesFilter = ticket.status === "Resolved" || ticket.status === "Closed";
-          break;
-        default:
-          matchesFilter = true;
-      }
+    if (term) {
+      working = working.filter((t) => {
+        const formattedId = `TKT-${t.id.slice(0, 3).toUpperCase()}`;
+        return (
+          formattedId.toLowerCase().includes(term) ||
+          t.id.toLowerCase().includes(term) ||
+          t.subject.toLowerCase().includes(term) ||
+          t.requester.toLowerCase().includes(term) ||
+          t.status.toLowerCase().includes(term) ||
+          t.priority.toLowerCase().includes(term) ||
+          (t.assigned?.toLowerCase().includes(term) ?? false)
+        );
+      });
+    }
 
-      const matchesSearch =
-        !term ||
-        ticket.subject.toLowerCase().includes(term) ||
-        ticket.id.toLowerCase().includes(term) ||
-        ticket.category.toLowerCase().includes(term);
+    if (fromDate || toDate) {
+      working = working.filter((t) => isDateInRange(t.createdAtDate, fromDate, toDate));
+    }
 
-      const matchesDate = isDateInRange(ticket.createdAtDate, fromDate, toDate);
-
-      return matchesFilter && matchesSearch && matchesDate;
-    });
+    return working;
   }, [tickets, filter, search, fromDate, toDate]);
+
+  // Per user: deletable when status is Open or Resolved/Closed. Blocked
+  // during Ongoing/Waiting so an in-flight ticket can't be removed.
+  const canDeleteTicket = (t: Ticket) =>
+    t.status === 'Open' || t.status === 'Resolved' || t.status === 'Closed';
+
+  const handleSelectTicket = (ticket: Ticket) => openTicket(ticket.backendId);
 
   return (
     <Box
       sx={{
         flexGrow: 1,
-        display: "flex",
-        flexDirection: "column",
+        display: 'flex',
+        flexDirection: 'column',
         minWidth: 0,
-        backgroundColor: "background.default",
+        backgroundColor: 'background.default',
       }}
     >
-      <StaffNavbar />
+      <PageHeader />
 
-      <Box sx={{ px: 5, pb: 5, flexGrow: 1, overflowY: "auto" }}>
-        <DashboardHeader
-          start={fromDate}
-          end={toDate}
-          onDateChange={(start, end) => {
-            setFromDate(start);
-            setToDate(end);
-          }}
-        />
-
+      <Box sx={{ px: 5, pb: 5, flexGrow: 1, overflowY: 'auto' }}>
         <Box
           sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
             mb: 4,
-            borderRadius: 2,
-            display: "flex",
-            gap: 3,
-            flexWrap: "wrap",
+            flexWrap: 'wrap',
+            gap: 2,
           }}
         >
-          <StatCard
-            title="Submitted"
-            value={stats.submitted}
-            caption={`${stats.submitted} ticket${stats.submitted === 1 ? "" : "s"} you have raised`}
-            icon={
-              <Box
-                sx={{
-                  backgroundColor: "primary.main",
-                  borderRadius: 2,
-                  p: 1.3,
-                }}
-              >
-                <TicketSubmittedIcon size={25} />
-              </Box>
-            }
-          />
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              Staff Dashboard
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mt: 0.5 }}>
+              Manage all your tickets
+            </Typography>
+          </Box>
+        </Box>
 
-          <StatCard
-            title="Ongoing"
-            value={stats.ongoing}
-            caption={`${stats.ongoing} ticket${stats.ongoing === 1 ? "" : "s"} being worked on`}
-            icon={
-              <Box
-                sx={{
-                  backgroundColor: "#FFE2C2",
-                  borderRadius: 2,
-                  p: 1.3,
-                }}
-              >
-                <TicketInProgressIcon size={25} />
-              </Box>
-            }
-          />
-
-          <StatCard
-            title="Open"
-            value={stats.open}
-            caption={`${stats.open} ticket${stats.open === 1 ? "" : "s"} awaiting action`}
-            icon={
-              <Box
-                sx={{
-                  backgroundColor: "#FFC2C2",
-                  borderRadius: 2,
-                  p: 1.3,
-                }}
-              >
-                <TicketUrgentIcon size={25} />
-              </Box>
-            }
-          />
-
-          <StatCard
-            title="Resolved"
-            value={stats.resolved}
-            caption={`${stats.resolved} ticket${stats.resolved === 1 ? "" : "s"} resolved`}
-            icon={
-              <Box
-                sx={{
-                  backgroundColor: "#C1E1CE",
-                  borderRadius: 2,
-                  p: 1.3,
-                }}
-              >
-                <TicketResolvedIcon size={25} />
-              </Box>
-            }
+        <Box sx={{ mb: 5 }}>
+          <StatsCardGrid
+            assignedToMe={stats.submitted}
+            resolved={stats.resolved}
+            unassigned={stats.open}
+            averageRating={null}
+            totalRatings={0}
           />
         </Box>
 
         <Box
           sx={{
-            mb: 4,
-            p: 3,
-            bgcolor: "background.paper",
-            borderRadius: 3,
-            border: "1px solid",
-            borderColor: "divider",
+            pt: 4,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            mb: 3,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
           }}
         >
-          <StaffToolbar
-            activeFilter={filter}
-            onFilterChange={setFilter}
+          <TicketFilterBar
+            tabs={STAFF_FILTER_TABS}
+            activeTab={filter}
+            onChange={setFilter}
             search={search}
             onSearchChange={setSearch}
-            onRaiseTicket={() => setOpenModal(true)}
           />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setRaiseOpen(true)}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 500,
+                borderRadius: '8px',
+                px: 2.5,
+                py: 0.9,
+                boxShadow: 'none',
+              }}
+            >
+              Raise a Ticket
+            </Button>
+            <DateRangeFilter
+              start={fromDate}
+              end={toDate}
+              onChange={(start, end) => {
+                setFromDate(start);
+                setToDate(end);
+              }}
+            />
+          </Box>
         </Box>
 
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ minHeight: 0 }}>
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-              <CircularProgress size={32} sx={{ color: "primary.main" }} />
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress size={32} sx={{ color: 'primary.main' }} />
             </Box>
           ) : error ? (
             <Box
               sx={{
                 py: 4,
                 px: 3,
-                borderRadius: "12px",
-                backgroundColor: "error.light",
-                border: "1px solid",
-                borderColor: "error.main",
-                textAlign: "center",
+                borderRadius: '12px',
+                backgroundColor: 'error.light',
+                border: '1px solid',
+                borderColor: 'error.main',
+                textAlign: 'center',
               }}
             >
-              <Typography sx={{ color: "error.main", fontSize: "14px", fontWeight: 500, mb: 1 }}>
+              <Typography sx={{ color: 'error.main', fontSize: '14px', fontWeight: 500, mb: 1 }}>
                 Could not load your tickets
               </Typography>
-              <Typography sx={{ color: "error.dark", fontSize: "13px" }}>
+              <Typography sx={{ color: 'error.dark', fontSize: '13px' }}>
                 {error}
               </Typography>
             </Box>
           ) : (
-            <StaffTable
+            <TicketTable
               tickets={filteredTickets}
-              onRowClick={handleSelectTicket}
+              onSelect={handleSelectTicket}
               onEdit={handleOpenEdit}
               onDelete={handleOpenDelete}
+              canDelete={canDeleteTicket}
             />
           )}
         </Box>
       </Box>
-
-      <RaiseTicketModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSubmit={handleCreateTicket}
-      />
-
-      <TicketDetailDrawer
-        ticket={selectedTicket}
-        open={drawerOpen}
-        onClose={handleCloseDrawer}
-        connection={connection}
-        canAccept={false}
-        currentUserId={currentUserId}
-        onTicketUpdated={(updated) => {
-          setSelectedTicket(updated);
-          setTickets((prev) =>
-            prev.map((t) => (t.backendId === updated.backendId ? updated : t))
-          );
-        }}
-      />
 
       <Dialog
         open={deleteDialogOpen}
@@ -536,7 +486,7 @@ function StaffDashboardPage() {
                   value={editDepartmentId}
                   onChange={(e) => {
                     setEditDepartmentId(e.target.value);
-                    setEditCategoryId("");
+                    setEditCategoryId('');
                   }}
                 >
                   <MenuItem value="" disabled>
@@ -556,7 +506,7 @@ function StaffDashboardPage() {
                   onChange={(e) => setEditCategoryId(e.target.value)}
                 >
                   <MenuItem value="" disabled>
-                    {editDepartmentId ? "Select Category" : "Choose a department first"}
+                    {editDepartmentId ? 'Select Category' : 'Choose a department first'}
                   </MenuItem>
                   {filteredCategories.map((cat) => (
                     <MenuItem key={cat.id} value={cat.id}>
@@ -622,41 +572,56 @@ function StaffDashboardPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <RaiseTicketModal
+        open={raiseOpen}
+        onClose={() => setRaiseOpen(false)}
+        onSubmit={async (formData) => {
+          try {
+            await createTicketRequest(formData);
+            await refetch();
+            setRaiseOpen(false);
+          } catch (err) {
+            // Surface the error via the modal's own flow; keep the modal open so
+            // the user can retry. The modal's internal submitting flag handles the
+            // button spinner.
+            throw err;
+          }
+        }}
+      />
     </Box>
   );
 }
 
-
-
 function mapBackendTicket(ticket: TicketResponseDto): Ticket {
   const statusMap: Record<string, TicketStatus> = {
-    Active: "Open",
-    Ongoing: "Ongoing",
-    Resolved: "Resolved",
-    Closed: "Closed",
+    Active: 'Open',
+    Ongoing: 'Ongoing',
+    Resolved: 'Resolved',
+    Closed: 'Closed',
   };
 
   const formatDate = (value: string | null) => {
-    if (!value) return "—";
+    if (!value) return '—';
     const date = new Date(value);
     return isNaN(date.getTime())
       ? value
-      : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return {
     id: ticket.id.slice(0, 8).toUpperCase(),
     backendId: ticket.id,
     subject: ticket.title,
-    department: ticket.departmentName || "—",
+    department: ticket.departmentName || '—',
     departmentId: ticket.departmentId,
-    category: ticket.categoryName || "—",
+    category: ticket.categoryName || '—',
     categoryId: ticket.categoryId,
     description: ticket.description,
     attachmentUrl: ticket.attachmentUrl || null,
-    priority: (ticket.priority as Ticket["priority"]) || "Medium",
-    status: statusMap[ticket.status] || "Waiting",
-    requester: ticket.createdByName || "You",
+    priority: (ticket.priority as Ticket['priority']) || 'Medium',
+    status: statusMap[ticket.status] || 'Waiting',
+    requester: ticket.createdByName || 'You',
     requesterId: ticket.createdById,
     assigned: ticket.assignedAgentName || null,
     createdAt: formatDate(ticket.createdAt),

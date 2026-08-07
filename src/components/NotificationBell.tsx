@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Badge, IconButton, Menu, MenuItem, Typography, Box, CircularProgress, useTheme } from '@mui/material';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useTicketDrawer } from '@/context/TicketDrawerContext';
 import type { NotificationDto } from '@/lib/api';
 
 interface NotificationBellProps {
@@ -10,7 +10,7 @@ interface NotificationBellProps {
 
 function NotificationBell({ icon }: NotificationBellProps) {
   const theme = useTheme();
-  const navigate = useNavigate();
+  const { openTicket } = useTicketDrawer();
   const { notifications, unreadCount, loading, markAsRead } = useNotifications();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -26,7 +26,7 @@ function NotificationBell({ icon }: NotificationBellProps) {
     await markAsRead(notification.id);
     handleClose();
     if (notification.ticketId) {
-      navigate(`/tickets/${notification.ticketId}`);
+      openTicket(notification.ticketId);
     }
   };
 

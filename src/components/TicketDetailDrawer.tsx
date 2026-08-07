@@ -30,7 +30,6 @@ import {
   updateTicketStatusRequest,
   type TicketMessageDto,
 } from '@/lib/api';
-import { joinTicketGroup, leaveTicketGroup } from '@/hooks/useSignalR';
 import { CloseIcon, MoreIcon, AttachmentIcon, SendIcon } from '@/components/icons';
 
 interface TicketDetailDrawerProps {
@@ -133,22 +132,12 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, loading: messagesLoading, error: messagesError, addMessage } = useTicketMessages(
-    ticket?.backendId ?? null
+    ticket?.backendId ?? null,
+    connection
   );
 
   const needsAccept = canAccept && ticket?.status === 'Open';
   const isChatEnabled = !needsAccept;
-
-  useEffect(() => {
-    if (open && ticket?.backendId && connection) {
-      joinTicketGroup(connection, ticket.backendId);
-    }
-    return () => {
-      if (ticket?.backendId && connection) {
-        leaveTicketGroup(connection, ticket.backendId);
-      }
-    };
-  }, [open, ticket?.backendId, connection]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -326,6 +315,34 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
                 {ticket.requester}
               </Typography>
             </Box>
+            {ticket.attachmentUrl && (
+              <Box
+                component="a"
+                href={ticket.attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mt: 1.5,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: '8px',
+                  color: 'text.secondary',
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  '&:hover': { backgroundColor: 'action.hover' },
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                Attachment
+              </Box>
+            )}
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -383,76 +400,8 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
           <DetailRow label="Created" value={ticket.createdAt} />
         </Box>
 
-        {/* Original Ticket */}
-{(ticket.description || ticket.attachmentUrl) && (
-  <Box
-    sx={{
-      px: 3,
-      py: 2.5,
-      borderBottom: '1px solid',
-      borderColor: 'divider',
-      backgroundColor: 'background.paper',
-    }}
-  >
-    <Typography
-      variant="subtitle2"
-      sx={{
-        fontWeight: 600,
-        mb: 1.5,
-      }}
-    >
-      Original Request
-    </Typography>
-
-    {ticket.description && (
-      <Typography
-        variant="body2"
-        sx={{
-          color: 'text.secondary',
-          lineHeight: 1.7,
-          whiteSpace: 'pre-wrap',
-        }}
-      >
-        {ticket.description}
-      </Typography>
-    )}
-
-    {ticket.attachmentUrl && (
-      <Box sx={{ mt: 2 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            display: 'block',
-            mb: 1,
-            color: 'text.secondary',
-          }}
-        >
-          Attachment
-        </Typography>
-        <Box
-          component="img"
-          src={ticket.attachmentUrl}
-          alt="Ticket attachment"
-          onClick={() => {
-            if (ticket.attachmentUrl) window.open(ticket.attachmentUrl, '_blank');
-          }}
-          sx={{
-            width: '100%',
-            maxHeight: 260,
-            objectFit: 'cover',
-            borderRadius: '10px',
-            border: '1px solid',
-            borderColor: 'divider',
-            cursor: 'pointer',
-            '&:hover': {
-              opacity: 0.95,
-            },
-          }}
-        />
-      </Box>
-    )}
-  </Box>
-)}
+        {/* Original Request removed — the description is now the first chat message,
+            and the attachment is rendered as a small thumbnail in the header. */}
 
         {/* Rating */}
         {canRate && (

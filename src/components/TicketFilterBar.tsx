@@ -7,25 +7,27 @@ const SearchIcon = () => (
   </svg>
 );
 
-
-type FilterTab = 'All' | 'Mine' | 'Unassigned';
-
-interface TicketFilterBarProps {
-  activeTab: FilterTab;
-  onChange: (tab: FilterTab) => void;
+interface TicketFilterBarProps<T extends string> {
+  /** Tab labels (and values) in display order. */
+  tabs: readonly T[];
+  activeTab: T;
+  onChange: (tab: T) => void;
   search?: string;
   onSearchChange?: (value: string) => void;
 }
 
 /**
- * Filter tabs, search, and filter icon for the ticket table.
+ * Filter tabs + search bar for the ticket table. Generic over the tab type
+ * so each dashboard can supply its own (e.g. Mine/Unassigned for agents,
+ * Open/Waiting/Resolved for staff).
  */
-function TicketFilterBar({
+function TicketFilterBar<T extends string>({
+  tabs,
   activeTab,
   onChange,
   search = '',
   onSearchChange,
-}: TicketFilterBarProps) {
+}: TicketFilterBarProps<T>) {
   const theme = useTheme();
 
   return (
@@ -39,7 +41,7 @@ function TicketFilterBar({
       }}
     >
       <Box sx={{ display: 'flex', gap: 1, backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100], borderRadius: '10px', p: 0.5 }}>
-        {(['All', 'Mine', 'Unassigned'] as FilterTab[]).map((tab) => (
+        {tabs.map((tab) => (
           <Button
             key={tab}
             onClick={() => onChange(tab)}
@@ -83,7 +85,6 @@ function TicketFilterBar({
             sx={{ ml: 1, fontSize: 14, flex: 1 }}
           />
         </Paper>
-
       </Box>
     </Box>
   );

@@ -4,7 +4,6 @@ import Header from '../components/Header';
 import StatsCardGrid from '../components/StatsCardGrid';
 import TicketFilterBar from '../components/TicketFilterBar';
 import TicketTable from '../components/TicketTable';
-import TicketDetailDrawer from '../components/TicketDetailDrawer';
 import DateRangeFilter from '../components/DateRangeFilter';
 import type { Ticket } from '@/components/ui/types/ticket';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
@@ -12,9 +11,12 @@ import { useOpenTickets } from '@/hooks/useOpenTickets';
 import { useAverageRating } from '@/hooks/useAverageRating';
 import { useSignalR } from '@/hooks/useSignalR';
 import { useAuth } from '@/context/AuthContext';
+import { useTicketDrawer } from '@/context/TicketDrawerContext';
 import type { TicketResponseDto, TicketMessageDto } from '@/lib/api';
 
 type FilterTab = 'All' | 'Mine' | 'Unassigned';
+
+const FILTER_TABS: readonly FilterTab[] = ['All', 'Mine', 'Unassigned'];
 
 function isDateInRange(isoDate: string, start?: string, end?: string) {
   if (!start && !end) return true;
@@ -56,27 +58,32 @@ function AgentDashboardPage() {
   const { rating: averageRating, loading: ratingLoading } = useAverageRating(currentUserId);
 
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+
+  const { openTicket } = useTicketDrawer();
 
   const myTickets = useMemo(() => assignedTickets?.map(mapBackendTicket) ?? [], [assignedTickets]);
   const unassignedTickets = useMemo(() => openTickets?.map(mapBackendTicket) ?? [], [openTickets]);
 
   const handleNewMessage = useCallback((message: TicketMessageDto) => {
-    // Refresh lists when a new message arrives so counts stay current.
-    if (selectedTicket?.backendId === message.ticketId) return;
-    refetchAssigned();
-    refetchOpen();
-  }, [refetchAssigned, refetchOpen, selectedTicket?.backendId]);
+    // The drawer subscribes to its own ticket group, so messages for the
+    // currently-open ticket arrive in the drawer directly. Here we just
+    // refresh the lists so counts / status stay current.
+    if (message.ticketId) {
+      refetchAssigned();
+      refetchOpen();
+    }
+  }, [refetchAssigned, refetchOpen]);
 
   const handleNewNotification = useCallback(() => {
     // Notification handled by the notification system.
   }, []);
 
-  const { connection } = useSignalR({
+  // Page-level listener for cross-ticket updates. The connection itself
+  // is owned by TicketDrawerHost at the layout level.
+  useSignalR({
     onMessage: handleNewMessage,
     onNotification: handleNewNotification,
   });
@@ -118,19 +125,7 @@ function AgentDashboardPage() {
   }, [activeTab, myTickets, unassignedTickets, search, fromDate, toDate]);
 
   const handleSelectTicket = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-    setDrawerOpen(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setTimeout(() => setSelectedTicket(null), 250);
-  };
-
-  const handleTicketUpdated = (updatedTicket: Ticket) => {
-    setSelectedTicket(updatedTicket);
-    refetchAssigned();
-    refetchOpen();
+    openTicket(ticket.backendId);
   };
 
   return (
@@ -180,7 +175,7 @@ function AgentDashboardPage() {
             mb: 3,
           }}
         >
-          <TicketFilterBar activeTab={activeTab} onChange={setActiveTab} search={search} onSearchChange={setSearch} />
+          <TicketFilterBar tabs={FILTER_TABS} activeTab={activeTab} onChange={setActiveTab} search={search} onSearchChange={setSearch} />
         </Box>
 
         <Box sx={{ minHeight: 0 }}>
@@ -212,15 +207,6 @@ function AgentDashboardPage() {
           )}
         </Box>
       </Box>
-
-      <TicketDetailDrawer
-        ticket={selectedTicket}
-        open={drawerOpen}
-        onClose={handleCloseDrawer}
-        connection={connection}
-        onTicketUpdated={handleTicketUpdated}
-        currentUserId={currentUserId}
-      />
     </>
   );
 }
