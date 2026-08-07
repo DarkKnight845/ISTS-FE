@@ -14,11 +14,8 @@ const STORAGE_KEY = 'ists-theme-mode';
 
 function getInitialMode(): ThemeMode {
   const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
-  if (saved === 'light' || saved === 'dark') return saved;
-
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
+  // Light is the default; only honor an explicit prior choice of 'dark'.
+  if (saved === 'dark') return 'dark';
   return 'light';
 }
 

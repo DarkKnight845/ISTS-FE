@@ -13,9 +13,9 @@ function StaffNavbar() {
 
   const initials = user
     ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
-    : 'E';
+    : '·';
 
-  const displayName = user?.fullName || 'Eniafe Bada';
+  const displayName = user?.fullName || 'Loading…';
   const roleLabel = user?.roles?.[0] || 'Staff';
 
   return (

@@ -14,9 +14,9 @@ function Header() {
 
   const initials = user
     ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
-    : 'A';
+    : '·';
 
-  const displayName = user?.fullName || 'Agent';
+  const displayName = user?.fullName || 'Loading…';
   const department = user?.departmentName || 'IT Department';
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) => {

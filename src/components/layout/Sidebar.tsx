@@ -7,11 +7,11 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { istsIcon } from '@/assets/img';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeMode } from '@/context/ThemeContext';
-import { DashboardIcon, TicketIcon, AnalyticsIcon, SunIcon, MoonIcon } from '@/components/icons';
+import { DashboardIcon, TicketIcon, AnalyticsIcon, SunIcon, MoonIcon, LogoutIcon } from '@/components/icons';
 
 interface NavItem {
   label: string;
@@ -35,10 +35,16 @@ function getNavItems(role: string | null): NavItem[] {
 }
 
 function Sidebar() {
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
   const { mode, toggleMode } = useThemeMode();
   const location = useLocation();
+  const navigate = useNavigate();
   const navItems = getNavItems(role);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
 
@@ -123,18 +129,34 @@ function Sidebar() {
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
           ISTS Portal v1.0
         </Typography>
-        <IconButton
-          onClick={toggleMode}
-          size="small"
-          sx={{
-            color: 'primary.contrastText',
-            backgroundColor: 'rgba(255,255,255,0.1)',
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
-          }}
-          title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-        >
-          {mode === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
-        </IconButton>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <IconButton
+            onClick={toggleMode}
+            size="small"
+            sx={{
+              color: 'primary.contrastText',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
+            }}
+            title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            aria-label="Toggle theme"
+          >
+            {mode === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+          </IconButton>
+          <IconButton
+            onClick={handleLogout}
+            size="small"
+            sx={{
+              color: 'primary.contrastText',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
+            }}
+            title="Log out"
+            aria-label="Log out"
+          >
+            <LogoutIcon size={18} />
+          </IconButton>
+        </Box>
       </Box>
     </Box>
     </> 

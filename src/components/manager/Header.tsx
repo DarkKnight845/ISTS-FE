@@ -8,9 +8,9 @@ function Header() {
 
   const initials = user
     ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
-    : 'D';
+    : '·';
 
-  const displayName = user?.fullName || 'Dept. Head';
+  const displayName = user?.fullName || 'Loading…';
   const department = user?.departmentName || 'IT Department';
 
   return (
