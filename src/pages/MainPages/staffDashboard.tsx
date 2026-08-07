@@ -32,7 +32,6 @@ import {
   updateTicketRequest,
   getDepartmentsRequest,
 } from '@/lib/api';
-import type { TicketFormData } from '@/components/ui/Modals/RaiseTicketForm';
 
 type StaffFilter = 'All' | 'Open' | 'Waiting' | 'Resolved';
 

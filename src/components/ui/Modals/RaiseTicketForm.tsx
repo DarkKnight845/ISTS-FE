@@ -20,7 +20,7 @@ import {
 } from "@/lib/api";
 
 export interface TicketFormData {
-  subject: string;
+  title: string;
   description: string;
   priority: string;
   departmentId: string;
@@ -41,7 +41,7 @@ const PRIORITY_OPTIONS = [
 
 function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
   const theme = useTheme();
-  const [subject, setSubject] = useState("");
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("");
   const [departmentId, setDepartmentId] = useState("");
@@ -120,7 +120,7 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
     e.preventDefault();
     setSubmitError(null);
 
-    if (!subject.trim()) {
+    if (!title.trim()) {
       setSubmitError("Please enter a ticket subject.");
       return;
     }
@@ -143,7 +143,7 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
 
     try {
       await onSubmit({
-        subject: subject.trim(),
+        title: title.trim(),
         description: description.trim(),
         priority,
         departmentId,
@@ -193,8 +193,8 @@ function RaiseTicketForm({ onSubmit }: RaiseTicketFormProps) {
 
           <TextField
             fullWidth
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="Summarize your issue in one sentence"
             sx={{
               "& .MuiOutlinedInput-root": inputStyle,
