@@ -23,6 +23,8 @@ import {
   updateSLARequest,
   invalidateCache,
   type SLAPriorityInput,
+  type SLARuleDto,
+  type SLARulesResponse,
   type TicketPriority,
 } from '@/lib/api';
 
