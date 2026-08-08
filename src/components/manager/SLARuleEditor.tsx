@@ -5,6 +5,11 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Paper,
   Table,
   TableBody,
@@ -50,6 +55,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [exists, setExists] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // System.Text.Json default naming policy is camelCase, so a C# property named
   // `SLAs` may serialize as `slAs` (or `slas`/`SLAs` depending on options). Read
@@ -138,12 +144,45 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     return null;
   }, [rules]);
 
-  const handleSave = async () => {
+  const handleSaveClick = async () => {
     if (validationError) {
       setSaveError(validationError);
       return;
     }
 
+    // Re-check the backend right before deciding what to do. The `exists`
+    // flag is set from the initial load, but it may be stale.
+    setSaving(true);
+    setSaveError(null);
+    setSuccess(null);
+    setInfo(null);
+
+    try {
+      const fresh = await getSLAByDepartmentRequest(departmentId);
+      console.log('[SLA] pre-save GET:', fresh);
+      const hasExistingRules = extractRules(fresh).length > 0;
+      setExists(hasExistingRules);
+
+      if (hasExistingRules) {
+        // Prompt for confirmation before overwriting existing rules.
+        setConfirmOpen(true);
+      } else {
+        // No existing rules; create immediately.
+        await createSLARequest({ departmentId, priorities: rules });
+        setSuccess('SLA rules created successfully.');
+        await loadRules();
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to prepare SLA save';
+      const status = (err as Error & { status?: number }).status;
+      setSaveError(`${message}${status ? ` (HTTP ${status})` : ''}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConfirmUpdate = async () => {
+    setConfirmOpen(false);
     setSaving(true);
     setSaveError(null);
     setSuccess(null);
@@ -152,32 +191,14 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     const payload = { departmentId, priorities: rules };
 
     try {
-      // Re-check the backend right before saving. The `exists` flag is set from
-      // the initial load, but another user/session may have created rules since
-      // then, or the flag may be stale. A fresh GET lets us pick the correct
-      // method and avoids the 409 Conflict from POSTing over existing rules.
-      const fresh = await getSLAByDepartmentRequest(departmentId);
-      console.log('[SLA] pre-save GET:', fresh);
-      const hasExistingRules = extractRules(fresh).length > 0;
-      setExists(hasExistingRules);
-
-      if (hasExistingRules) {
-        await updateSLARequest(payload);
-        setSuccess('SLA rules updated successfully.');
-      } else {
-        await createSLARequest(payload);
-        setSuccess('SLA rules created successfully.');
-      }
-
-      // Always reload the saved rules from the backend so the UI reflects what
-      // is actually stored (and not stale cache or local state).
+      await updateSLARequest(payload);
+      setSuccess('SLA rules updated successfully.');
       await loadRules();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
+      const message = err instanceof Error ? err.message : 'Failed to update SLA rules';
       const status = (err as Error & { status?: number }).status;
 
-      // Safety net: if the backend still reports a conflict, rules exist but
-      // our GET detection failed. Retry with PATCH so the user's changes apply.
+      // Safety net: if the backend still reports a conflict, retry with PATCH.
       if (status === 409 || message.toLowerCase().includes('already exists')) {
         setInfo('Rules already exist on the server. Retrying as update…');
         try {
@@ -323,7 +344,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
         <Button
           variant="contained"
           startIcon={saving ? <CircularProgress size={18} sx={{ color: 'primary.contrastText' }} /> : <SaveIcon />}
-          onClick={handleSave}
+          onClick={handleSaveClick}
           disabled={saving || loading}
           sx={{
             textTransform: 'none',
@@ -337,6 +358,38 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
           {saving ? 'Saving…' : exists ? 'Update SLA rules' : 'Create SLA rules'}
         </Button>
       </Box>
+
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        aria-labelledby="sla-update-dialog-title"
+        aria-describedby="sla-update-dialog-description"
+      >
+        <DialogTitle id="sla-update-dialog-title">Confirm SLA update</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="sla-update-dialog-description">
+            Are you sure you want to update the SLA rules for this department? This will
+            overwrite the existing configuration.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setConfirmOpen(false)}
+            variant="outlined"
+            sx={{ textTransform: 'none', borderRadius: '10px' }}
+          >
+            No, cancel
+          </Button>
+          <Button
+            onClick={handleConfirmUpdate}
+            variant="contained"
+            autoFocus
+            sx={{ textTransform: 'none', borderRadius: '10px' }}
+          >
+            Yes, update
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
