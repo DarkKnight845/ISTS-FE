@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Paper,
   Table,
@@ -122,8 +123,9 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     setSaveError(null);
     setSuccess(null);
 
+    const payload = { departmentId, priorities: rules };
+
     try {
-      const payload = { departmentId, priorities: rules };
       if (exists) {
         await updateSLARequest(payload);
       } else {
@@ -135,11 +137,23 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       await loadRules();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
-      // If the backend says rules already exist, flip to update mode and reload
-      // so the user can save again without seeing the same error.
-      if (message.toLowerCase().includes('already exists')) {
-        setSaveError(`${message} Click "Update SLA rules" to overwrite the existing configuration.`);
-        await loadRules();
+
+      // If the backend says rules already exist, the UI was in create mode but
+      // the department already has rules. Automatically retry with PATCH so the
+      // user doesn't have to click twice.
+      if (!exists && message.toLowerCase().includes('already exists')) {
+        try {
+          await updateSLARequest(payload);
+          setExists(true);
+          setSuccess('SLA rules updated successfully.');
+          await loadRules();
+        } catch (retryErr) {
+          setSaveError(
+            retryErr instanceof Error
+              ? retryErr.message
+              : 'Failed to update SLA rules after detecting they already exist.'
+          );
+        }
       } else {
         setSaveError(message);
       }
@@ -250,11 +264,19 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px' }}>
-          {exists
-            ? 'Updating these rules will overwrite the existing SLA configuration for this department.'
-            : 'No SLA rules exist for this department yet. Save to create them.'}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Chip
+            size="small"
+            label={exists ? 'Existing rules' : 'New rules'}
+            color={exists ? 'success' : 'default'}
+            sx={{ fontWeight: 600, borderRadius: '8px' }}
+          />
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px' }}>
+            {exists
+              ? 'Changes will overwrite the existing SLA configuration for this department.'
+              : 'No SLA rules exist yet. Save to create them.'}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={saving ? <CircularProgress size={18} sx={{ color: 'primary.contrastText' }} /> : <SaveIcon />}
