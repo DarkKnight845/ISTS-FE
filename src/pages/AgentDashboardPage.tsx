@@ -77,9 +77,18 @@ function AgentDashboardPage() {
     }
   }, [refetchAssigned, refetchOpen]);
 
-  const handleNewNotification = useCallback(() => {
-    // Notification handled by the notification system.
-  }, []);
+  const handleNewNotification = useCallback(
+    (notification: { ticketId?: string | null }) => {
+      // Notification tied to a ticket usually means another user (or system)
+      // changed it (e.g. new ticket raised, escalated, reassigned). Refresh
+      // both lists so counts stay accurate without a manual reload.
+      if (notification.ticketId) {
+        refetchAssigned();
+        refetchOpen();
+      }
+    },
+    [refetchAssigned, refetchOpen]
+  );
 
   // Page-level listener for cross-ticket updates. The connection itself
   // is owned by TicketDrawerHost at the layout level.

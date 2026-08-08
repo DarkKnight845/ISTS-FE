@@ -23,6 +23,13 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
       : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
+  // Defensive: backend sometimes returns null/empty for createdByName despite
+  // the DTO contract. Use an id-derived label instead of a hardcoded "Unknown".
+  const trimmedRequester = (ticket.createdByName ?? "").trim();
+  const requesterFallback = ticket.createdById
+    ? `User ${ticket.createdById.slice(0, 6)}`
+    : "User";
+
   return {
     id: ticket.id.slice(0, 8).toUpperCase(),
     backendId: ticket.id,
@@ -35,7 +42,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     attachmentUrl: ticket.attachmentUrl || null,
     priority: (ticket.priority as Ticket["priority"]) || "Medium",
     status: statusMap[ticket.status] || "Waiting",
-    requester: ticket.createdByName || "Unknown",
+    requester: trimmedRequester || requesterFallback,
     requesterId: ticket.createdById,
     assigned: ticket.assignedAgentName || null,
     createdAt: formatDate(ticket.createdAt),

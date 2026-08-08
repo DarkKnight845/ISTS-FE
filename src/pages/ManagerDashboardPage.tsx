@@ -366,7 +366,10 @@ function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTic
       ? ticket.createdAt
       : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  const requester = ticket.createdByName || 'Unknown';
+  // Defensive: backend sometimes returns null/empty for createdByName despite
+  // the DTO contract. Use an id-derived label instead of a hardcoded "Unknown".
+  const trimmedRequester = (ticket.createdByName ?? '').trim();
+  const requester = trimmedRequester || (ticket.createdById ? `User ${ticket.createdById.slice(0, 6)}` : 'User');
   const requesterInitials = requester
     .split(' ')
     .map((n) => n[0])

@@ -33,6 +33,7 @@ import {
   deleteTicketRequest,
   updateTicketRequest,
   getDepartmentsRequest,
+  sendTicketMessageRequest,
 } from '@/lib/api';
 
 type StaffFilter = 'All' | 'Open' | 'Waiting' | 'Resolved';
@@ -92,9 +93,17 @@ function StaffDashboardPage() {
     }
   }, [refetch]);
 
-  const handleNewNotification = useCallback((_notification: NotificationDto) => {
-    // Notification handled by the notification system.
-  }, []);
+  const handleNewNotification = useCallback(
+    (notification: NotificationDto) => {
+      // When a notification arrives tied to one of our tickets (e.g. agent
+      // accepted, replied, escalated), refresh the list so the row reflects
+      // the new status / assignee without a manual reload.
+      if (notification.ticketId) {
+        refetch();
+      }
+    },
+    [refetch]
+  );
 
   // Page-level listener for cross-ticket updates. The connection itself
   // is owned by TicketDrawerHost at the layout level.
@@ -606,7 +615,24 @@ function StaffDashboardPage() {
         onClose={() => setRaiseOpen(false)}
         onSubmit={async (formData) => {
           try {
-            await createTicketRequest(formData);
+            const newTicket = await createTicketRequest(formData);
+            // Post the typed description as the first chat message on the new
+            // ticket. Backend doesn't auto-create an initial message, so this
+            // keeps the chat thread consistent with the rest of the app.
+            if (newTicket?.id && formData.description.trim()) {
+              try {
+                await sendTicketMessageRequest(
+                  newTicket.id,
+                  formData.description.trim(),
+                  null,
+                  false
+                );
+              } catch (msgErr) {
+                // Don't fail the whole flow if the seed message fails — the
+                // ticket itself was created successfully.
+                console.warn('Failed to seed first ticket message:', msgErr);
+              }
+            }
             await refetch();
             setRaiseOpen(false);
           } catch (err) {

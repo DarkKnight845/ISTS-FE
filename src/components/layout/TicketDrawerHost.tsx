@@ -128,6 +128,18 @@ function TicketDrawerHost() {
     };
   }, [connection, notificationConnection, openTicketId, refetchTicket]);
 
+  // Fallback poll: pick up cross-session mutations the SignalR events may
+  // miss (e.g. agent accepted while staff had the drawer open, with no
+  // message or notification bridging the change). 8s interval is light
+  // enough for a single in-flight request and fast enough to feel live.
+  useEffect(() => {
+    if (!openTicketId) return;
+    const interval = setInterval(() => {
+      refetchTicket(openTicketId);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [openTicketId, refetchTicket]);
+
   if (!openTicketId) return null;
 
   if (loading) {
