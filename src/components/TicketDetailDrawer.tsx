@@ -22,6 +22,7 @@ import {
 import * as signalR from '@microsoft/signalr';
 import type { Ticket } from '@/components/ui/types/ticket';
 import { useTicketMessages } from '@/hooks/useTicketMessages';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   assignTicketRequest,
   createRatingRequest,
@@ -111,6 +112,7 @@ function MessageBubble({ message, isMe }: { message: TicketMessageDto; isMe: boo
  * Slide-out ticket detail panel with accept flow and real-time chat.
  */
 function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated, canAccept = true, currentUserId = null }: TicketDetailDrawerProps) {
+  const { user: currentUser } = useCurrentUser();
   const [reply, setReply] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -171,9 +173,16 @@ function TicketDetailDrawer({ ticket, open, onClose, connection, onTicketUpdated
     setAccepting(true);
     setActionError(null);
     try {
-      await assignTicketRequest(ticket.backendId, currentUserId);
-      const updated: Ticket = { ...ticket, status: 'Ongoing' };
-      onTicketUpdated?.(updated);
+      const updated = await assignTicketRequest(ticket.backendId, currentUserId);
+      // Reflect backend's assignment immediately so the staff viewer (and
+      // the accepting agent) sees the new assignee without waiting for a
+      // refetch. Prefer the server response, fall back to the cached user.
+      const assignedName = updated.assignedAgentName || currentUser?.fullName || 'Assigned';
+      onTicketUpdated?.({
+        ...ticket,
+        status: 'Ongoing',
+        assigned: assignedName,
+      });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to accept ticket');
     } finally {

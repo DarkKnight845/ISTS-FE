@@ -8,6 +8,7 @@ interface UseNotificationsResult {
   error: string | null;
   refetch: () => void;
   markAsRead: (notificationId: string) => Promise<void>;
+  removeNotification: (notificationId: string) => void;
   addNotification: (notification: NotificationDto) => void;
 }
 
@@ -41,11 +42,32 @@ export function useNotifications(): UseNotificationsResult {
     );
   };
 
+  // Drop a notification from the local list once the user has acted on it
+  // (e.g. clicked through to the ticket). Keeps the menu tidy and avoids
+  // stale rows that look like new notifications.
+  const removeNotification = (notificationId: string) => {
+    setNotifications((prev) => prev?.filter((n) => n.id !== notificationId) ?? null);
+  };
+
   const addNotification = (notification: NotificationDto) => {
-    setNotifications((prev) => (prev ? [notification, ...prev] : [notification]));
+    setNotifications((prev) => {
+      // Skip if we already have a row for this id — duplicates arrive when
+      // a fresh SignalR event races with the initial GET.
+      if (prev?.some((n) => n.id === notification.id)) return prev;
+      return prev ? [notification, ...prev] : [notification];
+    });
   };
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
-  return { notifications, unreadCount, loading, error, refetch: fetchNotifications, markAsRead, addNotification };
+  return {
+    notifications,
+    unreadCount,
+    loading,
+    error,
+    refetch: fetchNotifications,
+    markAsRead,
+    removeNotification,
+    addNotification,
+  };
 }

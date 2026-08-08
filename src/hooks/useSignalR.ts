@@ -5,6 +5,7 @@ import type { TicketMessageDto, NotificationDto } from '@/lib/api';
 
 interface UseSignalRResult {
   connection: signalR.HubConnection | null;
+  notificationConnection: signalR.HubConnection | null;
   connected: boolean;
   error: string | null;
 }
@@ -95,7 +96,12 @@ export function useSignalR(listeners: SignalRListener = {}): UseSignalRResult {
     };
   }, []);
 
-  return { connection: supportConnectionRef.current, connected, error };
+  return {
+    connection: supportConnectionRef.current,
+    notificationConnection: notificationConnectionRef.current,
+    connected,
+    error,
+  };
 }
 
 export async function joinTicketGroup(connection: signalR.HubConnection | null, ticketId: string) {

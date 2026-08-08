@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import TicketDetailDrawer from '@/components/TicketDetailDrawer';
 import { useTicketDrawer } from '@/context/TicketDrawerContext';
@@ -23,6 +23,14 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
       : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // The DTO types createdByName as non-null, but the wire sometimes returns
+  // an empty string or null. Treat both as missing and fall back to a short
+  // id-derived label rather than "Unknown", which reads as an error.
+  const trimmedName = (ticket.createdByName ?? '').trim();
+  const requesterFallback = ticket.createdById
+    ? `User ${ticket.createdById.slice(0, 6)}`
+    : 'User';
+
   return {
     id: ticket.id.slice(0, 8).toUpperCase(),
     backendId: ticket.id,
@@ -35,7 +43,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     attachmentUrl: ticket.attachmentUrl || null,
     priority: (ticket.priority as Ticket['priority']) || 'Medium',
     status: statusMap[ticket.status] || 'Waiting',
-    requester: ticket.createdByName || 'Unknown',
+    requester: trimmedName || requesterFallback,
     requesterId: ticket.createdById,
     assigned: ticket.assignedAgentName || null,
     createdAt: formatDate(ticket.createdAt),
@@ -52,11 +60,23 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
 function TicketDrawerHost() {
   const { openTicketId, closeTicket } = useTicketDrawer();
   const { userId, role } = useAuth();
-  const { connection } = useSignalR();
+  const { connection, notificationConnection } = useSignalR();
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pull the latest server snapshot for the open ticket. Used on mount and
+  // whenever a SignalR event indicates the ticket changed (message arrival,
+  // notification, etc.).
+  const refetchTicket = useCallback(async (id: string) => {
+    try {
+      const data = await getTicketByIdRequest(id);
+      setTicket(mapBackendTicket(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load ticket');
+    }
+  }, []);
 
   useEffect(() => {
     if (!openTicketId) {
@@ -84,6 +104,29 @@ function TicketDrawerHost() {
       cancelled = true;
     };
   }, [openTicketId]);
+
+  // Refresh the open ticket when cross-session events arrive for it.
+  // SignalR doesn't have a dedicated "ticket updated" event, so we piggyback
+  // on incoming messages and notifications — either signals someone else
+  // touched the ticket.
+  useEffect(() => {
+    if (!openTicketId) return;
+
+    const onMessage = (message: { ticketId?: string }) => {
+      if (message.ticketId === openTicketId) refetchTicket(openTicketId);
+    };
+    const onNotification = (notification: { ticketId?: string | null }) => {
+      if (notification.ticketId === openTicketId) refetchTicket(openTicketId);
+    };
+
+    if (connection) connection.on('ReceiveMessage', onMessage);
+    if (notificationConnection) notificationConnection.on('Notification', onNotification);
+
+    return () => {
+      if (connection) connection.off('ReceiveMessage', onMessage);
+      if (notificationConnection) notificationConnection.off('Notification', onNotification);
+    };
+  }, [connection, notificationConnection, openTicketId, refetchTicket]);
 
   if (!openTicketId) return null;
 

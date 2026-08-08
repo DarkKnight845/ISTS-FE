@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -19,6 +19,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useThemeMode } from '@/context/ThemeContext';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useSignalR } from '@/hooks/useSignalR';
+import { useTicketDrawer } from '@/context/TicketDrawerContext';
+import type { NotificationDto } from '@/lib/api';
 import { BellIcon, LogoutIcon, MoonIcon, SunIcon } from '@/components/icons';
 
 interface PageHeaderProps {
@@ -31,7 +34,40 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
   const { user } = useCurrentUser();
   const { logout } = useAuth();
   const { mode, toggleMode } = useThemeMode();
-  const { notifications, unreadCount, loading, markAsRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    removeNotification,
+    addNotification,
+  } = useNotifications();
+  const { openTicket } = useTicketDrawer();
+  const { notificationConnection } = useSignalR();
+
+  // Live updates: when the server pushes a Notification event over SignalR,
+  // prepend it to the local list so the bell and badge reflect it without a
+  // page reload.
+  useEffect(() => {
+    if (!notificationConnection) return;
+    const handler = (notification: NotificationDto) => addNotification(notification);
+    notificationConnection.on('Notification', handler);
+    return () => {
+      notificationConnection.off('Notification', handler);
+    };
+  }, [notificationConnection, addNotification]);
+
+  const handleNotificationClick = async (notification: NotificationDto) => {
+    try {
+      await markAsRead(notification.id);
+    } finally {
+      // Drop the row from the menu regardless of the network result — once
+      // the user has acted, the row is no longer useful in the list.
+      removeNotification(notification.id);
+    }
+    handleNotifClose();
+    if (notification.ticketId) openTicket(notification.ticketId);
+  };
 
   const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
@@ -45,7 +81,6 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
 
   const handleNotifOpen = (e: React.MouseEvent<HTMLElement>) => setNotifAnchorEl(e.currentTarget);
   const handleNotifClose = () => setNotifAnchorEl(null);
-  const handleMarkRead = async (id: string) => markAsRead(id);
 
   const handleProfileOpen = (e: React.MouseEvent<HTMLElement>) => setProfileAnchorEl(e.currentTarget);
   const handleProfileClose = () => setProfileAnchorEl(null);
@@ -131,10 +166,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
             notifications.map((n) => (
               <MenuItem
                 key={n.id}
-                onClick={() => {
-                  if (!n.isRead) handleMarkRead(n.id);
-                  handleNotifClose();
-                }}
+                onClick={() => handleNotificationClick(n)}
                 sx={{
                   px: 2,
                   py: 1.5,
