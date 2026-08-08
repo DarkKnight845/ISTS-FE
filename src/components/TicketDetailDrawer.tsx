@@ -14,6 +14,7 @@ import {
   Rating,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material';
 import * as signalR from '@microsoft/signalr';
 import type { Ticket } from '@/components/ui/types/ticket';
@@ -165,6 +166,7 @@ function TicketDetailDrawer({
   canAccept = true,
   currentUserId = null,
 }: TicketDetailDrawerProps) {
+  const theme = useTheme();
   const { user: currentUser } = useCurrentUser();
   const [reply, setReply] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -464,37 +466,34 @@ function TicketDetailDrawer({
             </Box>
           )}
 
-          <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
-              Description
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.primary', fontSize: 14, lineHeight: 1.7, mb: ticket.attachmentUrl ? 2 : 0 }}>
-              {ticket.description || 'No description provided.'}
-            </Typography>
-
+          <Box sx={{ px: 3, py: 2, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+            <DetailRow label="Priority" value={ticket.priority} />
+            <DetailRow label="Assigned to" value={ticket.assigned ?? 'Unassigned'} />
+            <DetailRow label="Created" value={ticket.createdAt} />
             {ticket.attachmentUrl && (
-              <Box>
-                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary', fontWeight: 600 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', fontWeight: 600 }}>
                   Attachment
                 </Typography>
-                <Box
-                  component="img"
-                  src={ticket.attachmentUrl}
-                  alt="Ticket attachment"
-                  onClick={() => {
-                    if (ticket.attachmentUrl) window.open(ticket.attachmentUrl, '_blank');
+                <a
+                  href={ticket.attachmentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: theme.palette.primary.main,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    textDecoration: 'none',
                   }}
-                  sx={{
-                    width: '100%',
-                    maxHeight: 220,
-                    objectFit: 'cover',
-                    borderRadius: '12px',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.95 },
-                  }}
-                />
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                  View file
+                </a>
               </Box>
             )}
           </Box>

@@ -2,16 +2,15 @@ import { Box, Typography, useTheme } from "@mui/material";
 import { useMemo } from "react";
 import { istsIcon } from "@/assets/img";
 import LoginForm from "./sections/LoginForm";
-import ionTicket from '@/assets/icons/ion_ticket.svg'
 
 const QUOTES = [
-  "ISTS — turning IT support into a seamless experience.",
+  "Turning IT support into a seamless experience.",
   "Every ticket is a step toward a smoother workflow.",
   "Fast, organized, reliable IT service starts here.",
   "Where complex issues meet simple solutions.",
   "Your technology problems, resolved with precision.",
   "Empowering teams through smarter support.",
-  "ISTS keeps the digital engine running.",
+  "Keeping the digital engine running, one ticket at a time.",
 ];
 
 function LoginPage() {
@@ -24,83 +23,134 @@ function LoginPage() {
       sx={{
         display: "flex",
         flexDirection: { xs: "column", md: "row" },
-        height: "100vh",
+        minHeight: "100vh",
         width: "100%",
-        position: "relative",
         backgroundColor: 'background.default',
       }}
     >
+      {/* Left brand panel */}
       <Box
         sx={{
-          flex: 1,
-          backgroundColor: 'primary.main',
+          flex: { xs: '0 0 auto', md: 1 },
+          minHeight: { xs: '34vh', md: '100vh' },
+          background: isDark
+            ? 'linear-gradient(145deg, #0f172a 0%, #1e293b 100%)'
+            : 'linear-gradient(135deg, #0B4F9C 0%, #1565C0 55%, #42A5F5 100%)',
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          flexDirection: "column",
+          justifyContent: "space-between",
           position: "relative",
-          width: { xs: '100%', md: "50%" },
-          minHeight: { xs: '40vh', md: '100vh' },
+          p: { xs: 3, md: 5 },
+          overflow: 'hidden',
         }}
       >
-          <Box
-            component="img"
-            src={ionTicket}
-            alt="ISTS ticket"
-            sx={{
-              width: { xs: 180, sm: 260, md: 320 },
-              height: 'auto',
-              opacity: isDark ? 0.85 : 1,
-            }}
-          />
+        {/* Decorative circles */}
         <Box
           sx={{
-            position: "absolute",
-            top: { xs: -30, md: -43 },
-            left: 16,
+            position: 'absolute',
+            top: '-10%',
+            right: '-15%',
+            width: 420,
+            height: 420,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.06)',
+            pointerEvents: 'none',
           }}
-        >
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '-20%',
+            left: '-10%',
+            width: 360,
+            height: 360,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.05)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Logo */}
+        <Box sx={{ position: 'relative', zIndex: 1 }}>
           <Box
             component="img"
             src={istsIcon}
             alt="ISTS Logo"
             sx={{
-              height: { xs: 120, md: 160 },
-              width: { xs: 120, md: 160 },
+              height: { xs: 56, md: 72 },
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
             }}
           />
         </Box>
 
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: { xs: 3, md: 4 },
-            left: { xs: 3, md: 4 },
-            maxWidth: { xs: '85%', md: '70%' },
-            p: { xs: 2, md: 3 },
-            borderRadius: '16px',
-            backgroundColor: 'rgba(255, 255, 255, 0.12)',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
+        {/* Center value proposition */}
+        <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 520 }}>
           <Typography
-            variant="body2"
+            variant="h3"
             sx={{
-              color: 'rgba(255, 255, 255, 0.95)',
-              fontSize: { xs: '13px', md: '15px' },
-              fontWeight: 500,
-              lineHeight: 1.5,
-              fontStyle: 'italic',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: { xs: '28px', sm: '34px', md: '42px' },
+              lineHeight: 1.15,
+              mb: 2,
             }}
           >
-            “{quote}”
+            IT Support,
+            <br />
+            Simplified.
           </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: { xs: '15px', md: '18px' },
+              lineHeight: 1.6,
+              maxWidth: 440,
+            }}
+          >
+            Streamline tickets, track SLAs, and keep your team productive — all in one place.
+          </Typography>
+        </Box>
+
+        {/* Quote pill */}
+        <Box sx={{ position: 'relative', zIndex: 1 }}>
+          <Box
+            sx={{
+              display: 'inline-block',
+              px: 2.5,
+              py: 1.5,
+              borderRadius: '999px',
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(6px)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              maxWidth: { xs: '100%', sm: 420 },
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#fff',
+                fontSize: { xs: '13px', md: '14px' },
+                fontWeight: 500,
+                fontStyle: 'italic',
+                lineHeight: 1.5,
+              }}
+            >
+              “{quote}”
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
+      {/* Right form panel */}
       <Box
         sx={{
-          width: { xs: '100%', md: "50%" },
-          alignSelf: 'center',
+          flex: { xs: '1 1 auto', md: 1 },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: { xs: 2, sm: 4, md: 6 },
           backgroundColor: 'background.default',
         }}
       >

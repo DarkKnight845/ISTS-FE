@@ -8,7 +8,6 @@ import {
   Link,
   TextField,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const theme = useTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,166 +45,183 @@ function LoginForm() {
   return (
     <Box
       sx={{
-        maxWidth: "519px",
-        margin: "0 auto",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "column",
-        gap: "20px",
+        width: '100%',
+        maxWidth: 440,
+        mx: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
         backgroundColor: 'background.paper',
-        padding: { xs: "30px 20px" },
-        mt: { xs: "-50px", sm: "-30px" },
-        borderRadius: { xs: '24px 24px 0 0', md: 0 },
+        p: { xs: 3, sm: 5 },
+        borderRadius: '20px',
+        boxShadow: { xs: 'none', sm: 3 },
+        border: { xs: 'none', sm: '1px solid' },
+        borderColor: 'divider',
       }}
     >
-      <Typography variant="h5" sx={{ mb: 3, color: 'text.primary', fontWeight: 600, fontFamily: "inherit" }}>
-        Log in to your account.
-      </Typography>
-      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-        <FormControl sx={{ mb: 4, width: "450px" }}>
-          <TextField
-            name="email"
-            placeholder="Email"
-            fullWidth
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            sx={{
-              fontFamily: "inherit",
-              fontSize: {
-                xs: "12px",
-                sm: "12px",
-                md: "14px",
-                lg: "16px",
-              },
-              fontWeight: "400",
-              borderRadius: "8px",
-              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(8, 42, 75, 0.03)',
-              border: "none",
-              color: 'text.primary',
-
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "12px",
-                color: 'text.primary',
-
-                "& fieldset": {
-                  border: "none",
-                },
-
-                "&:hover fieldset": {
-                  border: "none",
-                },
-
-                "&.Mui-focused fieldset": {
-                  border: "none",
-                },
-
-                "& input::placeholder": {
-                  color: 'text.secondary',
-                  opacity: 0.7,
-                },
-              },
-            }}
-          />
-        </FormControl>
-
-        <FormControl sx={{ mb: 4, width: "450px" }}>
-          <TextField
-            name="password"
-            type="password"
-            placeholder="Password"
-            fullWidth
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{
-              borderRadius: "12px",
-              color: 'text.secondary',
-              border: "none",
-              fontFamily: "inherit",
-              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(8, 42, 75, 0.03)',
-              fontSize: "16px",
-              fontWeight: "400",
-
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "12px",
-                color: 'text.primary',
-
-                "& fieldset": {
-                  border: "none",
-                },
-
-                "&:hover fieldset": {
-                  border: "none",
-                },
-
-                "&.Mui-focused fieldset": {
-                  border: "none",
-                },
-
-                "& input::placeholder": {
-                  color: 'text.secondary',
-                  opacity: 0.7,
-                },
-              },
-            }}
-          />
-
-          <Link
-            href="/forgot-password"
-            underline="hover"
-            sx={{
-              color: 'primary.main',
-              fontFamily: "inherit",
-              fontSize: {
-                xs: "10px",
-                sm: "12px",
-              },
-              fontWeight: 500,
-              textDecorationStyle: "solid",
-              cursor: "pointer",
-              mt: "12px",
-              alignSelf: "self-end",
-            }}
-          >
-            Forgot Password?
-          </Link>
-        </FormControl>
-
-        {error && (
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'error.main',
-              fontSize: "13px",
-              mb: 3,
-              textAlign: "center",
-              width: "450px",
-            }}
-          >
-            {error}
-          </Typography>
-        )}
-
-        <CustomButton
-          loadingPosition="end"
-          type="submit"
-          loading={loading}
+      <Box>
+        <Typography
+          variant="h4"
           sx={{
-            backgroundColor: 'primary.main',
-            color: 'primary.contrastText',
-            borderRadius: "8px",
-            fontFamily: "inherit",
-            fontSize: { xs: "13px", sm: "20px" },
-            fontWeight: 500,
-            width: "450px",
-            padding: ".6rem",
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-            },
+            color: 'text.primary',
+            fontWeight: 700,
+            fontSize: { xs: '26px', sm: '30px' },
+            mb: 1,
           }}
         >
-          Log in
-        </CustomButton>
+          Welcome back
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+            fontSize: '15px',
+            lineHeight: 1.5,
+          }}
+        >
+          Enter your credentials to access your dashboard.
+        </Typography>
+      </Box>
+
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <FormControl fullWidth>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 0.75,
+                color: 'text.secondary',
+                fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              Email address
+            </Typography>
+            <TextField
+              name="email"
+              type="email"
+              placeholder="you@company.com"
+              fullWidth
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  backgroundColor: 'background.default',
+                  fontSize: '15px',
+                  color: 'text.primary',
+                  '& fieldset': {
+                    borderColor: 'divider',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main',
+                    borderWidth: '1.5px',
+                  },
+                },
+              }}
+            />
+          </FormControl>
+
+          <FormControl fullWidth>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 0.75,
+                color: 'text.secondary',
+                fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              Password
+            </Typography>
+            <TextField
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              fullWidth
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  backgroundColor: 'background.default',
+                  fontSize: '15px',
+                  color: 'text.primary',
+                  '& fieldset': {
+                    borderColor: 'divider',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main',
+                    borderWidth: '1.5px',
+                  },
+                },
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+              <Link
+                href="/forgot-password"
+                underline="hover"
+                sx={{
+                  color: 'primary.main',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                Forgot password?
+              </Link>
+            </Box>
+          </FormControl>
+
+          {error && (
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'error.main',
+                fontSize: '13px',
+                textAlign: 'center',
+                py: 1,
+                px: 1.5,
+                borderRadius: '8px',
+                backgroundColor: 'error.light',
+              }}
+            >
+              {error}
+            </Typography>
+          )}
+
+          <CustomButton
+            loadingPosition="end"
+            type="submit"
+            loading={loading}
+            fullWidth
+            sx={{
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 600,
+              py: 1.25,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
+          >
+            Log in
+          </CustomButton>
+        </Box>
       </form>
     </Box>
   );
