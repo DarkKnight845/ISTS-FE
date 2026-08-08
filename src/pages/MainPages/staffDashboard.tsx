@@ -24,6 +24,7 @@ import TicketTable from '@/components/TicketTable';
 import DateRangeFilter from '@/components/DateRangeFilter';
 import RaiseTicketModal from '@/components/ui/Modals/RaiseTicketModals';
 import { useTicketDrawer } from '@/context/TicketDrawerContext';
+import { useTicketSync } from '@/context/TicketSyncContext';
 import type { Ticket, TicketStatus } from '@/components/ui/types/ticket';
 import { useMyTickets } from '@/hooks/useMyTickets';
 import { useSignalR } from '@/hooks/useSignalR';
@@ -52,6 +53,7 @@ const PRIORITY_OPTIONS: readonly string[] = ['Low', 'Medium', 'High', 'Urgent'];
 function StaffDashboardPage() {
   const { tickets: backendTickets, loading, error, refetch } = useMyTickets();
   const { openTicket } = useTicketDrawer();
+  const { notifyTicketChanged } = useTicketSync();
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [filter, setFilter] = useState<StaffFilter>('All');
@@ -84,25 +86,31 @@ function StaffDashboardPage() {
     }
   }, [backendTickets]);
 
-  const handleNewMessage = useCallback((message: TicketMessageDto) => {
-    // The drawer subscribes to its own ticket group, so messages for the
-    // currently-open ticket arrive in the drawer directly. Here we just
-    // refresh the list so counts / status stay current.
-    if (message.ticketId) {
-      refetch();
-    }
-  }, [refetch]);
+  const handleNewMessage = useCallback(
+    (message: TicketMessageDto) => {
+      // The drawer subscribes to its own ticket group, so messages for the
+      // currently-open ticket arrive in the drawer directly. Here we just
+      // refresh the list so counts / status stay current, and broadcast the
+      // change so the drawer can pick it up via the ticket-sync bus.
+      if (message.ticketId) {
+        refetch();
+        notifyTicketChanged(message.ticketId);
+      }
+    },
+    [refetch, notifyTicketChanged]
+  );
 
   const handleNewNotification = useCallback(
     (notification: NotificationDto) => {
       // When a notification arrives tied to one of our tickets (e.g. agent
-      // accepted, replied, escalated), refresh the list so the row reflects
-      // the new status / assignee without a manual reload.
+      // accepted, replied, escalated), refresh the list AND tell any open
+      // drawer that this ticket changed.
       if (notification.ticketId) {
         refetch();
+        notifyTicketChanged(notification.ticketId);
       }
     },
-    [refetch]
+    [refetch, notifyTicketChanged]
   );
 
   // Page-level listener for cross-ticket updates. The connection itself
@@ -137,8 +145,10 @@ function StaffDashboardPage() {
     setDeleteLoading(true);
     setDeleteError(null);
     try {
-      await deleteTicketRequest(ticketToDelete.backendId);
+      const deletedId = ticketToDelete.backendId;
+      await deleteTicketRequest(deletedId);
       await refetch();
+      notifyTicketChanged(deletedId);
       setDeleteDialogOpen(false);
       setTimeout(() => setTicketToDelete(null), 250);
     } catch (err) {
@@ -213,7 +223,8 @@ function StaffDashboardPage() {
     setEditLoading(true);
     setEditError(null);
     try {
-      await updateTicketRequest(ticketToEdit.backendId, {
+      const editedId = ticketToEdit.backendId;
+      await updateTicketRequest(editedId, {
         title: editSubject.trim(),
         description: editDescription.trim(),
         priority: editPriority,
@@ -221,6 +232,7 @@ function StaffDashboardPage() {
         categoryId: editCategoryId,
       });
       await refetch();
+      notifyTicketChanged(editedId);
       setEditDialogOpen(false);
       handleCloseEdit();
     } catch (err) {
@@ -634,6 +646,7 @@ function StaffDashboardPage() {
               }
             }
             await refetch();
+            if (newTicket?.id) notifyTicketChanged(newTicket.id);
             setRaiseOpen(false);
           } catch (err) {
             // Surface the error via the modal's own flow; keep the modal open so

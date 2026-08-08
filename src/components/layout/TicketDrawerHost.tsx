@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import TicketDetailDrawer from '@/components/TicketDetailDrawer';
 import { useTicketDrawer } from '@/context/TicketDrawerContext';
+import { useTicketSync } from '@/context/TicketSyncContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSignalR } from '@/hooks/useSignalR';
 import { getTicketByIdRequest, type TicketResponseDto } from '@/lib/api';
@@ -59,6 +60,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
  */
 function TicketDrawerHost() {
   const { openTicketId, closeTicket } = useTicketDrawer();
+  const { subscribe: subscribeToTicketChanges } = useTicketSync();
   const { userId, role } = useAuth();
   const { connection, notificationConnection } = useSignalR();
 
@@ -128,15 +130,30 @@ function TicketDrawerHost() {
     };
   }, [connection, notificationConnection, openTicketId, refetchTicket]);
 
-  // Fallback poll: pick up cross-session mutations the SignalR events may
-  // miss (e.g. agent accepted while staff had the drawer open, with no
-  // message or notification bridging the change). 8s interval is light
-  // enough for a single in-flight request and fast enough to feel live.
+  // Subscribe to the cross-page ticket sync bus. Whenever any page refetches
+  // its ticket list (after create/edit/delete or a SignalR push), it
+  // notifies the bus. We refetch the open ticket if the bus event matches
+  // its id (or is a global null). This is the primary real-time path.
+  useEffect(() => {
+    if (!openTicketId) return;
+    const unsubscribe = subscribeToTicketChanges((changedId) => {
+      if (!changedId || changedId === openTicketId) {
+        refetchTicket(openTicketId);
+      }
+    });
+    return unsubscribe;
+  }, [openTicketId, refetchTicket, subscribeToTicketChanges]);
+
+  // Tight safety-net poll. The bus covers SignalR-driven refreshes; the
+  // poll covers the case where the backend mutated a ticket and didn't
+  // emit anything to us (e.g. agent accepted, no message sent, no
+  // notification routed). 3s is short enough to feel real-time and
+  // cheap enough not to thrash.
   useEffect(() => {
     if (!openTicketId) return;
     const interval = setInterval(() => {
       refetchTicket(openTicketId);
-    }, 8000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [openTicketId, refetchTicket]);
 

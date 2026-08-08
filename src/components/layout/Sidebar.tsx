@@ -2,7 +2,7 @@ import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/mate
 import { NavLink, useLocation } from 'react-router-dom';
 import { istsIcon } from '@/assets/img';
 import { useAuth } from '@/context/AuthContext';
-import { DashboardIcon, TicketIcon, AnalyticsIcon } from '@/components/icons';
+import { DashboardIcon, TicketIcon, AnalyticsIcon, ClockIcon } from '@/components/icons';
 
 interface NavItem {
   label: string;
@@ -20,6 +20,11 @@ function getNavItems(role: string | null): NavItem[] {
   if (role === 'manager') {
     items.push({ label: 'Manager Dashboard', path: '/manager-dashboard', icon: <TicketIcon color="currentColor" /> });
     items.push({ label: 'Analytics', path: '/analytics', icon: <AnalyticsIcon color="currentColor" /> });
+    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <ClockIcon color="currentColor" /> });
+  }
+
+  if (role === 'admin') {
+    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <ClockIcon color="currentColor" /> });
   }
 
   return items;

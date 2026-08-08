@@ -125,6 +125,39 @@ export interface CategoryDto {
   departmentId?: string;
 }
 
+export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+
+export interface SLAPriorityInput {
+  priority: TicketPriority;
+  responseTimeMinutes: number;
+  resolutionTimeMinutes: number;
+}
+
+export interface SLARuleDto {
+  id: string;
+  departmentId: string;
+  priority: TicketPriority;
+  responseTimeMinutes: number;
+  resolutionTimeMinutes: number;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface SLARulesResponse {
+  departmentId: string;
+  slas: SLARuleDto[];
+}
+
+export interface CreateSLARequest {
+  departmentId: string;
+  priorities: SLAPriorityInput[];
+}
+
+export interface UpdateSLARequest {
+  departmentId: string;
+  priorities: SLAPriorityInput[];
+}
+
 export function getToken(): string | null {
   return localStorage.getItem("ists_access_token");
 }
@@ -410,6 +443,28 @@ export async function getDepartmentsRequest() {
 
 export async function getCategoriesRequest() {
   return apiRequest<CategoryDto[]>("/api/categories");
+}
+
+export async function getSLAByDepartmentRequest(departmentId: string) {
+  return apiRequest<SLARulesResponse>(`/api/sla/${departmentId}`);
+}
+
+export async function createSLARequest(payload: CreateSLARequest) {
+  const result = await apiRequest<SLARulesResponse>("/api/sla", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  invalidateCache(`/api/sla/${payload.departmentId}`);
+  return result;
+}
+
+export async function updateSLARequest(payload: UpdateSLARequest) {
+  const result = await apiRequest<SLARulesResponse>("/api/sla", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  invalidateCache(`/api/sla/${payload.departmentId}`);
+  return result;
 }
 
 export interface UpdateTicketPayload {

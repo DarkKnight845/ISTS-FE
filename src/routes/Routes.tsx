@@ -5,6 +5,7 @@ import {
   LandingPage,
   LoginPage,
   ManagerDashboardPage,
+  SLASettingsPage,
   StaffDashboardPage,
   TicketDetailPage,
 } from "./Lazyload";
@@ -73,6 +74,14 @@ function AppRoutes(): JSX.Element {
               element={
                 <RequireRole allowedRoles={["manager", "admin"]}>
                   <AnalyticsPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path='/sla-settings'
+              element={
+                <RequireRole allowedRoles={["manager", "admin"]}>
+                  <SLASettingsPage />
                 </RequireRole>
               }
             />
