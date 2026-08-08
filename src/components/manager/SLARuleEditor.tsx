@@ -52,13 +52,15 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   const [exists, setExists] = useState(false);
 
   // System.Text.Json default naming policy is camelCase, so a C# property named
-  // `SLAs` serializes as `slAs`. Read every plausible key so we don't miss it.
+  // `SLAs` may serialize as `slAs` (or `slas`/`SLAs` depending on options). Read
+  // every plausible key so we don't miss it.
   const extractRules = (response: SLARulesResponse): SLARuleDto[] => {
+    const raw = response as unknown as Record<string, SLARuleDto[] | undefined>;
     const candidates = [
       response.slas,
       response.SLAs,
-      (response as Record<string, SLARuleDto[] | undefined>).slAs,
-      (response as Record<string, SLARuleDto[] | undefined>)['sLAs'],
+      raw.slAs,
+      raw.sLAs,
     ];
     return candidates.find((c) => Array.isArray(c) && c.length > 0) ?? [];
   };
