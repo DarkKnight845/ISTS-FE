@@ -171,15 +171,21 @@ export function setToken(token: string | null) {
   }
 }
 
+export interface ApiRequestOptions extends Omit<RequestInit, 'cache'> {
+  /** When false, bypass the in-memory GET cache. Defaults to true. */
+  cache?: boolean;
+}
+
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
   const method = options.method?.toUpperCase() || "GET";
   const isGet = method === "GET";
+  const useCache = options.cache !== false;
 
-  if (isGet) {
+  if (isGet && useCache) {
     const cached = getCached<T>(endpoint);
     if (cached !== undefined) {
       return cached;
@@ -198,8 +204,12 @@ export async function apiRequest<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // Strip our custom cache option before passing to fetch so it doesn't clash
+  // with the native RequestInit.cache property (RequestCache enum).
+  const { cache: _cache, ...fetchOptions } = options;
+
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers,
   });
 
@@ -228,7 +238,7 @@ export async function apiRequest<T>(
 
   // Some endpoints return the payload directly instead of wrapping it.
   if (Array.isArray(body)) {
-    if (isGet) {
+    if (isGet && useCache) {
       setCached(endpoint, body);
     }
     return body as T;
@@ -246,7 +256,7 @@ export async function apiRequest<T>(
     throw new Error("Empty response from server");
   }
 
-  if (isGet) {
+  if (isGet && useCache) {
     setCached(endpoint, wrapped.data);
   }
 
@@ -450,7 +460,7 @@ export async function getCategoriesRequest() {
 }
 
 export async function getSLAByDepartmentRequest(departmentId: string) {
-  return apiRequest<SLARulesResponse>(`/api/sla/${departmentId}`);
+  return apiRequest<SLARulesResponse>(`/api/sla/${departmentId}`, { cache: false });
 }
 
 export async function createSLARequest(payload: CreateSLARequest) {
