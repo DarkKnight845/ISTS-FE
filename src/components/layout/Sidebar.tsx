@@ -2,7 +2,8 @@ import { Box, List, ListItemButton, ListItemIcon, ListItemText, Tooltip } from '
 import { NavLink, useLocation } from 'react-router-dom';
 import { istsIcon } from '@/assets/img';
 import { useAuth } from '@/context/AuthContext';
-import { DashboardIcon, TicketIcon, AnalyticsIcon, ClockIcon } from '@/components/icons';
+import { DashboardIcon, TicketIcon, AnalyticsIcon } from '@/components/icons';
+import GavelIcon from '@mui/icons-material/Gavel';
 
 interface NavItem {
   label: string;
@@ -20,11 +21,11 @@ function getNavItems(role: string | null): NavItem[] {
   if (role === 'manager') {
     items.push({ label: 'Manager Dashboard', path: '/manager-dashboard', icon: <TicketIcon color="currentColor" /> });
     items.push({ label: 'Analytics', path: '/analytics', icon: <AnalyticsIcon color="currentColor" /> });
-    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <ClockIcon color="currentColor" /> });
+    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <GavelIcon sx={{ fontSize: 20 }} /> });
   }
 
   if (role === 'admin') {
-    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <ClockIcon color="currentColor" /> });
+    items.push({ label: 'SLA Rules', path: '/sla-settings', icon: <GavelIcon sx={{ fontSize: 20 }} /> });
   }
 
   return items;

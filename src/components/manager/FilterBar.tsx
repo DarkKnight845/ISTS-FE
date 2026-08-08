@@ -2,6 +2,7 @@ import { Box, Button, FormControl, InputBase, MenuItem, Select, Typography, useT
 import type { SelectChangeEvent } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface FilterBarProps {
   search: string;
@@ -13,6 +14,9 @@ interface FilterBarProps {
   assignedTo: string;
   onAssignedChange: (value: string) => void;
   assignedOptions?: string[];
+  startDate?: string;
+  endDate?: string;
+  onDateChange?: (start: string, end: string) => void;
   onClear: () => void;
 }
 
@@ -26,6 +30,9 @@ function FilterBar({
   assignedTo,
   onAssignedChange,
   assignedOptions = [],
+  startDate,
+  endDate,
+  onDateChange,
   onClear,
 }: FilterBarProps) {
   const theme = useTheme();
@@ -137,6 +144,14 @@ function FilterBar({
             ))}
           </Select>
         </FormControl>
+
+        {onDateChange && (
+          <DateRangeFilter
+            start={startDate}
+            end={endDate}
+            onChange={onDateChange}
+          />
+        )}
 
         <Button
           variant="outlined"

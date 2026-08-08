@@ -28,7 +28,7 @@ interface PageHeaderProps {
   showDepartmentChip?: boolean;
 }
 
-function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
+function PageHeader({ showDepartmentChip = false }: PageHeaderProps) {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { logout } = useAuth();

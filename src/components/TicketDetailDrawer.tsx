@@ -102,7 +102,22 @@ function MessageBubble({
             Internal note
           </Typography>
         )}
-        {message.message}
+        {message.message && message.message !== 'Attachment' ? (
+          message.message
+        ) : message.attachmentUrl ? (
+          <Typography
+            component="span"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.5,
+              fontStyle: 'italic',
+              opacity: 0.9,
+            }}
+          >
+            Sent an attachment
+          </Typography>
+        ) : null}
         {message.attachmentUrl && (
           <Box sx={{ mt: 1 }}>
             <a
@@ -448,6 +463,41 @@ function TicketDetailDrawer({
               <Typography sx={{ color: 'success.dark', fontSize: 14, fontWeight: 600 }}>Thanks for your feedback!</Typography>
             </Box>
           )}
+
+          <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
+              Description
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.primary', fontSize: 14, lineHeight: 1.7, mb: ticket.attachmentUrl ? 2 : 0 }}>
+              {ticket.description || 'No description provided.'}
+            </Typography>
+
+            {ticket.attachmentUrl && (
+              <Box>
+                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary', fontWeight: 600 }}>
+                  Attachment
+                </Typography>
+                <Box
+                  component="img"
+                  src={ticket.attachmentUrl}
+                  alt="Ticket attachment"
+                  onClick={() => {
+                    if (ticket.attachmentUrl) window.open(ticket.attachmentUrl, '_blank');
+                  }}
+                  sx={{
+                    width: '100%',
+                    maxHeight: 220,
+                    objectFit: 'cover',
+                    borderRadius: '12px',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.95 },
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
 
           <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3, backgroundColor: 'background.default' }}>
             {messagesLoading ? (

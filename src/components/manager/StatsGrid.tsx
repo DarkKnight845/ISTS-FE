@@ -18,7 +18,7 @@ interface StatsGridProps {
 }
 
 const brandBlue = '#2563EB';
-const urgentRed = '#DC2626';
+const softRed = '#EF4444';
 
 function StatsGrid({
   openTickets,
@@ -32,7 +32,7 @@ function StatsGrid({
 
   const cards = [
     {
-      title: 'Open tickets',
+      title: 'Active tickets',
       value: openTickets,
       trend: 'Currently active',
       trendUp: undefined as boolean | undefined,
@@ -60,9 +60,9 @@ function StatsGrid({
       value: slaBreaches,
       trend: slaBreaches === 0 ? 'On track' : `${slaBreaches} ticket${slaBreaches === 1 ? '' : 's'} past SLA`,
       trendUp: slaBreaches === 0,
-      icon: <SlaBreachIcon color={breachUrgent ? urgentRed : '#DC2626'} />,
-      iconBg: '#FEE2E2',
-      valueColor: breachUrgent ? urgentRed : slaBreaches > 0 ? '#DC2626' : undefined,
+      icon: <SlaBreachIcon color={slaBreaches > 0 ? softRed : '#64748B'} />,
+      iconBg: '#FEF2F2',
+      valueColor: breachUrgent ? softRed : slaBreaches > 0 ? softRed : undefined,
     },
     {
       title: 'SLA compliance',
@@ -71,7 +71,7 @@ function StatsGrid({
       trendUp: slaCompliance >= 90,
       icon: <SlaComplianceIcon color={brandBlue} />,
       iconBg: '#DBEAFE',
-      valueColor: slaCompliance < 75 ? '#DC2626' : undefined,
+      valueColor: slaCompliance < 75 ? softRed : undefined,
     },
   ];
 

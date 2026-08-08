@@ -145,12 +145,12 @@ function TicketDetailDrawer({ open, ticket, onClose, onReassign }: TicketDetailD
               sx={{
                 p: 2,
                 borderRadius: '12px',
-                backgroundColor: 'error.light',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
                 border: '1px solid',
-                borderColor: 'error.main',
+                borderColor: 'rgba(239, 68, 68, 0.25)',
               }}
             >
-              <Typography sx={{ color: 'error.main', fontSize: '13px', fontWeight: 600 }}>
+              <Typography sx={{ color: '#EF4444', fontSize: '13px', fontWeight: 600 }}>
                 SLA breach: overdue by {ticket.overdueBy}
               </Typography>
             </Box>
@@ -191,25 +191,27 @@ function TicketDetailDrawer({ open, ticket, onClose, onReassign }: TicketDetailD
             )}
           </Box>
 
-          <Box sx={{ mt: 'auto', pt: 3 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              endIcon={<ArrowForwardIcon />}
-              onClick={onReassign}
-              sx={{
-                height: '46px',
-                textTransform: 'none',
-                borderRadius: '10px',
-                backgroundColor: 'primary.main',
-                fontWeight: 600,
-                fontSize: '14px',
-                '&:hover': { backgroundColor: 'primary.dark' },
-              }}
-            >
-              Reassign ticket
-            </Button>
-          </Box>
+          {ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
+            <Box sx={{ mt: 'auto', pt: 3 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                endIcon={<ArrowForwardIcon />}
+                onClick={onReassign}
+                sx={{
+                  height: '46px',
+                  textTransform: 'none',
+                  borderRadius: '10px',
+                  backgroundColor: 'primary.main',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  '&:hover': { backgroundColor: 'primary.dark' },
+                }}
+              >
+                Reassign ticket
+              </Button>
+            </Box>
+          )}
         </Box>
       </Box>
     </Drawer>

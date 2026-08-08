@@ -8,7 +8,6 @@ import TicketDetailDrawer from '@/components/manager/TicketDetailDrawer';
 import ReassignModal from '@/components/manager/ReassignModal';
 import ReassignSuccessModal from '@/components/manager/ReassignSuccessModal';
 import SlaBreachesModal from '@/components/manager/SlaBreachesModal';
-import DateRangeFilter from '@/components/DateRangeFilter';
 import { type ManagerTicket } from '@/data/mockManagerTickets';
 import { useTickets, type BackendTicket } from '@/hooks/useTickets';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
@@ -25,7 +24,8 @@ function ManagerDashboardPage() {
   const statusBackendMap: Record<string, string | undefined> = {
     All: undefined,
     Open: 'Open',
-    Ongoing: 'Ongoing',
+    // Backend enum member is InProgress; its display string is "Ongoing".
+    Ongoing: 'InProgress',
     Resolved: 'Resolved',
   };
 
@@ -193,14 +193,6 @@ function ManagerDashboardPage() {
             Manager Dashboard
           </Typography>
 
-          <DateRangeFilter
-            start={fromDate}
-            end={toDate}
-            onChange={(start, end) => {
-              setFromDate(start);
-              setToDate(end);
-            }}
-          />
         </Box>
 
         <Box sx={{ mb: 5 }}>
@@ -250,11 +242,19 @@ function ManagerDashboardPage() {
             assignedTo={assignedTo}
             onAssignedChange={setAssignedTo}
             assignedOptions={assignedOptions}
+            startDate={fromDate}
+            endDate={toDate}
+            onDateChange={(start, end) => {
+              setFromDate(start);
+              setToDate(end);
+            }}
             onClear={() => {
               setSearch('');
               setStatus('All');
               setPriority('All');
               setAssignedTo('All');
+              setFromDate('');
+              setToDate('');
             }}
           />
         </Box>

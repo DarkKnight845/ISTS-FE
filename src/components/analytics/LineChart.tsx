@@ -1,4 +1,5 @@
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { useRef, useState } from 'react';
 import type { WeeklyPoint } from '@/data/mockAnalytics';
 
 interface LineChartProps {
@@ -9,6 +10,12 @@ interface LineChartProps {
 
 function LineChart({ data, title, subtitle }: LineChartProps) {
   const theme = useTheme();
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    point: WeeklyPoint;
+  } | null>(null);
   const width = 600;
   const height = 220;
   const padding = { top: 30, right: 24, bottom: 40, left: 44 };
@@ -59,11 +66,11 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
         <LegendItem color={theme.palette.success.main} label="Resolved" />
       </Box>
 
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      <Box ref={chartRef} sx={{ width: '100%', overflowX: 'auto', position: 'relative' }}>
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ width: '100%', height: 'auto', minWidth: '360px' }}
+          style={{ width: '100%', height: 'auto', minWidth: '360px', display: 'block' }}
         >
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -100,14 +107,80 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
           <path d={areaPath(resolvedPath, data.map((d) => d.resolved))} fill={`${theme.palette.success.main}14`} />
           <path d={resolvedPath} fill="none" stroke={theme.palette.success.main} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
 
-          {/* Dots */}
-          {data.map((d, i) => (
-            <g key={`dots-${i}`}>
-              <circle cx={xForIndex(i)} cy={yForValue(d.received)} r={4} fill={theme.palette.background.paper} stroke={theme.palette.primary.main} strokeWidth={2} />
-              <circle cx={xForIndex(i)} cy={yForValue(d.resolved)} r={4} fill={theme.palette.background.paper} stroke={theme.palette.success.main} strokeWidth={2} />
-            </g>
-          ))}
+          {/* Dots and hover targets */}
+          {data.map((d, i) => {
+            const x = xForIndex(i);
+            const yReceived = yForValue(d.received);
+            const yResolved = yForValue(d.resolved);
+            const showTooltip = (e: React.MouseEvent) => {
+              const rect = chartRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              setTooltip({
+                x: e.clientX - rect.left + 12,
+                y: e.clientY - rect.top - 12,
+                point: d,
+              });
+            };
+            const moveTooltip = (e: React.MouseEvent) => {
+              const rect = chartRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              setTooltip((prev) =>
+                prev
+                  ? {
+                      x: e.clientX - rect.left + 12,
+                      y: e.clientY - rect.top - 12,
+                      point: d,
+                    }
+                  : null
+              );
+            };
+            return (
+              <g key={`dots-${i}`} onMouseEnter={showTooltip} onMouseMove={moveTooltip} onMouseLeave={() => setTooltip(null)}>
+                <circle cx={x} cy={yReceived} r={4} fill={theme.palette.background.paper} stroke={theme.palette.primary.main} strokeWidth={2} />
+                <circle cx={x} cy={yResolved} r={4} fill={theme.palette.background.paper} stroke={theme.palette.success.main} strokeWidth={2} />
+                {/* Larger invisible hit targets */}
+                <circle cx={x} cy={yReceived} r={18} fill="transparent" />
+                <circle cx={x} cy={yResolved} r={18} fill="transparent" />
+              </g>
+            );
+          })}
         </svg>
+
+        {tooltip && (
+          <Paper
+            sx={{
+              position: 'absolute',
+              left: tooltip.x,
+              top: tooltip.y,
+              zIndex: 10,
+              px: 1.25,
+              py: 0.75,
+              borderRadius: '10px',
+              boxShadow: 3,
+              pointerEvents: 'none',
+              minWidth: 130,
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, color: 'text.primary', fontSize: '12px', mb: 0.5 }}>
+              {tooltip.point.label}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 'primary.main' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px' }}>
+                Received: <strong style={{ color: theme.palette.text.primary }}>{tooltip.point.received}</strong>
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 'success.main' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px' }}>
+                Resolved: <strong style={{ color: theme.palette.text.primary }}>{tooltip.point.resolved}</strong>
+              </Typography>
+            </Box>
+          </Paper>
+        )}
       </Box>
     </Box>
   );

@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import type { Ticket, TicketPriority, TicketStatus } from '@/components/ui/types/ticket';
 
 interface TicketTableProps {
@@ -121,9 +122,14 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                       <Typography noWrap sx={{ fontWeight: 600, color: 'text.primary', fontSize: '14px', maxWidth: 260 }}>
                         {ticket.subject}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                        TKT-{ticket.id.slice(0, 3).toUpperCase()} • {ticket.createdAt}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          TKT-{ticket.id.slice(0, 3).toUpperCase()} • {ticket.createdAt}
+                        </Typography>
+                        {ticket.attachmentUrl && (
+                          <AttachFileIcon sx={{ fontSize: 14, color: 'text.disabled' }} aria-label="Has attachment" />
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 </TableCell>

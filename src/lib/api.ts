@@ -387,7 +387,10 @@ export async function sendTicketMessageRequest(
   isInternal = false
 ) {
   const formData = new FormData();
-  formData.append("Message", message);
+  // The backend validator requires Message to be non-empty. When sending an
+  // attachment without text, supply a small placeholder so the request succeeds.
+  const effectiveMessage = message.trim() || (attachment ? "Attachment" : "");
+  formData.append("Message", effectiveMessage);
   formData.append("IsInternal", String(isInternal));
   if (attachment) {
     formData.append("attachment", attachment);

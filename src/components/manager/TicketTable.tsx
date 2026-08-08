@@ -12,6 +12,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import type { ManagerTicket } from '@/data/mockManagerTickets';
 
 interface TicketTableProps {
@@ -32,6 +33,8 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
   Resolved: { bg: '#D1FAE5', text: '#059669' },
   Closed: { bg: '#E5E7EB', text: '#374151' },
 };
+
+const softRed = '#EF4444';
 
 function getInitials(name: string | null) {
   if (!name) return '—';
@@ -103,9 +106,12 @@ function TicketTable({ tickets, onRowClick }: TicketTableProps) {
                 >
                   <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                      <Typography noWrap sx={{ fontSize: '13px', fontWeight: 600, color: 'text.primary', maxWidth: 240 }}>
-                        {ticket.subject}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, maxWidth: 260 }}>
+                        <Typography noWrap sx={{ fontSize: '13px', fontWeight: 600, color: 'text.primary' }}>
+                          {ticket.subject}
+                        </Typography>
+                        {ticket.attachmentUrl && <AttachFileIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0 }} aria-label="Has attachment" />}
+                      </Box>
                       <Typography sx={{ fontSize: '12px', color: 'text.secondary' }}>
                         TKT-{ticket.id.slice(0, 3).toUpperCase()}
                       </Typography>
@@ -175,7 +181,7 @@ function TicketTable({ tickets, onRowClick }: TicketTableProps) {
                   <TableCell
                     sx={{
                       fontSize: '13px',
-                      color: ticket.isBreach ? 'error.main' : 'text.secondary',
+                      color: ticket.isBreach ? softRed : 'text.secondary',
                       fontWeight: ticket.isBreach ? 600 : 400,
                       borderBottom: `1px solid ${theme.palette.divider}`,
                     }}
