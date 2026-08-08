@@ -129,16 +129,17 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       } else {
         await createSLARequest(payload);
       }
-      setExists(true);
       setSuccess('SLA rules saved successfully.');
+      // Always reload the saved rules from the backend so the UI reflects what
+      // is actually stored (and not stale cache or local state).
+      await loadRules();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
       // If the backend says rules already exist, flip to update mode and reload
       // so the user can save again without seeing the same error.
       if (message.toLowerCase().includes('already exists')) {
-        setExists(true);
         setSaveError(`${message} Click "Update SLA rules" to overwrite the existing configuration.`);
-        loadRules();
+        await loadRules();
       } else {
         setSaveError(message);
       }
