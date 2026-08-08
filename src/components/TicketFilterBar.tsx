@@ -17,6 +17,8 @@ interface TicketFilterBarProps<T extends string> {
   /** When true, the embedded search field is hidden. Useful when the parent
    *  renders the search input elsewhere in the layout. */
   hideSearch?: boolean;
+  /** Optional date filter rendered next to the search input. */
+  dateFilter?: React.ReactNode;
 }
 
 /**
@@ -31,6 +33,7 @@ function TicketFilterBar<T extends string>({
   search = '',
   onSearchChange,
   hideSearch = false,
+  dateFilter,
 }: TicketFilterBarProps<T>) {
   const theme = useTheme();
 
@@ -69,6 +72,7 @@ function TicketFilterBar<T extends string>({
 
       {!hideSearch && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {dateFilter}
           <Paper
             sx={{
               display: 'flex',

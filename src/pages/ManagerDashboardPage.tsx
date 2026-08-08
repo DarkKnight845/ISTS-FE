@@ -12,8 +12,10 @@ import { type ManagerTicket } from '@/data/mockManagerTickets';
 import { useTickets, type BackendTicket } from '@/hooks/useTickets';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
 import { getAgentsRequest, assignTicketRequest, getBreachedTicketsRequest, type AgentDto, type TicketResponseDto } from '@/lib/api';
+import { useTicketSync } from '@/context/TicketSyncContext';
 
 function ManagerDashboardPage() {
+  const { notifyTicketChanged } = useTicketSync();
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [search, setSearch] = useState('');
@@ -154,6 +156,7 @@ function ManagerDashboardPage() {
     try {
       await assignTicketRequest(selectedTicket.backendId, agentId);
       await refetch();
+      notifyTicketChanged(selectedTicket.backendId);
       setReassignOpen(false);
       setSuccessAgentName(agent.fullName);
       setSuccessOpen(true);

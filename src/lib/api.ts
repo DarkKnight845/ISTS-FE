@@ -1,4 +1,5 @@
 import { getCached, invalidateCache, setCached } from "./cache";
+export { invalidateCache } from "./cache";
 import { decodeJwt } from "./jwt";
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5011").replace(/\/$/, "");

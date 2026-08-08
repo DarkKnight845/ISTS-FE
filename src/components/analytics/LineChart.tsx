@@ -27,17 +27,48 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
   const xForIndex = (index: number) => padding.left + (index * chartWidth) / (data.length - 1);
   const yForValue = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
 
-  const receivedPath = data
-    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xForIndex(i)} ${yForValue(d.received)}`)
-    .join(' ');
+  const pointsFor = (getter: (d: WeeklyPoint) => number) =>
+    data.map((d, i) => ({ x: xForIndex(i), y: yForValue(getter(d)) }));
 
-  const resolvedPath = data
-    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xForIndex(i)} ${yForValue(d.resolved)}`)
-    .join(' ');
+  // Simple cubic-bezier smoothing through the data points.
+  const smoothPath = (points: { x: number; y: number }[]) => {
+    if (points.length === 0) return '';
+    if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
 
-  const areaPath = (path: string, values: number[]) => {
-    const endX = xForIndex(values.length - 1);
-    const startX = xForIndex(0);
+    const controlPoint = (current: typeof points[0], previous: typeof points[0], next: typeof points[0], reverse?: boolean) => {
+      const p = previous || current;
+      const n = next || current;
+      const smoothing = 0.2;
+      const o = {
+        x: n.x - p.x,
+        y: n.y - p.y,
+      };
+      const angle = Math.atan2(o.y, o.x) + (reverse ? Math.PI : 0);
+      const length = Math.sqrt(o.x ** 2 + o.y ** 2) * smoothing;
+      return {
+        x: current.x + Math.cos(angle) * length,
+        y: current.y + Math.sin(angle) * length,
+      };
+    };
+
+    let d = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const startCP = controlPoint(points[i - 1], points[i - 2], points[i]);
+      const endCP = controlPoint(points[i], points[i - 1], points[i + 1], true);
+      d += ` C ${startCP.x} ${startCP.y}, ${endCP.x} ${endCP.y}, ${points[i].x} ${points[i].y}`;
+    }
+    return d;
+  };
+
+  const receivedPoints = pointsFor((d) => d.received);
+  const resolvedPoints = pointsFor((d) => d.resolved);
+  const receivedPath = smoothPath(receivedPoints);
+  const resolvedPath = smoothPath(resolvedPoints);
+
+  const areaPath = (path: string, points: { x: number; y: number }[]) => {
+    if (points.length === 0) return path;
+    const endX = points[points.length - 1].x;
+    const startX = points[0].x;
     return `${path} L ${endX} ${padding.top + chartHeight} L ${startX} ${padding.top + chartHeight} Z`;
   };
 
@@ -100,11 +131,11 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
           ))}
 
           {/* Received area */}
-          <path d={areaPath(receivedPath, data.map((d) => d.received))} fill={`${theme.palette.primary.main}14`} />
+          <path d={areaPath(receivedPath, receivedPoints)} fill={`${theme.palette.primary.main}14`} />
           <path d={receivedPath} fill="none" stroke={theme.palette.primary.main} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
 
           {/* Resolved area */}
-          <path d={areaPath(resolvedPath, data.map((d) => d.resolved))} fill={`${theme.palette.success.main}14`} />
+          <path d={areaPath(resolvedPath, resolvedPoints)} fill={`${theme.palette.success.main}14`} />
           <path d={resolvedPath} fill="none" stroke={theme.palette.success.main} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
 
           {/* Dots and hover targets */}

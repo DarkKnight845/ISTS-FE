@@ -29,6 +29,10 @@ export function useOpenTickets(): UseOpenTicketsResult {
 
   useEffect(() => {
     fetchTickets();
+    const interval = setInterval(() => {
+      fetchTickets();
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   return { tickets, loading, error, refetch: fetchTickets };

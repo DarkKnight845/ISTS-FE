@@ -20,6 +20,7 @@ import * as signalR from '@microsoft/signalr';
 import type { Ticket } from '@/components/ui/types/ticket';
 import { useTicketMessages } from '@/hooks/useTicketMessages';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useTicketSync } from '@/context/TicketSyncContext';
 import {
   assignTicketRequest,
   createRatingRequest,
@@ -168,6 +169,7 @@ function TicketDetailDrawer({
 }: TicketDetailDrawerProps) {
   const theme = useTheme();
   const { user: currentUser } = useCurrentUser();
+  const { notifyTicketChanged } = useTicketSync();
   const [reply, setReply] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -193,7 +195,8 @@ function TicketDetailDrawer({
   );
 
   const needsAccept = canAccept && ticket?.status === 'Open';
-  const isChatEnabled = !needsAccept;
+  const isChatClosed = ticket?.status === 'Resolved' || ticket?.status === 'Closed';
+  const isChatEnabled = !needsAccept && !isChatClosed;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -229,6 +232,7 @@ function TicketDetailDrawer({
       const updated = await assignTicketRequest(ticket.backendId, currentUserId);
       const assignedName = updated.assignedAgentName || currentUser?.fullName || 'Assigned';
       onTicketUpdated?.({ ...ticket, status: 'Ongoing', assigned: assignedName });
+      notifyTicketChanged(ticket.backendId);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to accept ticket');
     } finally {
@@ -256,6 +260,7 @@ function TicketDetailDrawer({
     try {
       await updateTicketStatusRequest(ticket.backendId, 'Resolved');
       onTicketUpdated?.({ ...ticket, status: 'Resolved' });
+      notifyTicketChanged(ticket.backendId);
       setCompleteDialogOpen(false);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to mark ticket as complete');
@@ -266,6 +271,7 @@ function TicketDetailDrawer({
     try {
       await escalateTicketRequest(ticket.backendId);
       onTicketUpdated?.({ ...ticket, status: 'Open', assigned: null });
+      notifyTicketChanged(ticket.backendId);
       setEscalateDialogOpen(false);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to escalate ticket');
@@ -507,7 +513,11 @@ function TicketDetailDrawer({
               ))
             ) : (
               <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-                {isChatEnabled ? 'No messages yet. Start the conversation below.' : 'Accept the ticket to start chatting.'}
+                {isChatEnabled
+                  ? 'No messages yet. Start the conversation below.'
+                  : isChatClosed
+                  ? 'This ticket is closed. Message history is read-only.'
+                  : 'Accept the ticket to start chatting.'}
               </Typography>
             )}
             <div ref={messagesEndRef} />
@@ -520,7 +530,30 @@ function TicketDetailDrawer({
               </Typography>
             )}
 
-            {needsAccept ? (
+            {isChatClosed ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1.5,
+                  py: 1.5,
+                  px: 2,
+                  borderRadius: '12px',
+                  backgroundColor: 'success.light',
+                  border: '1px solid',
+                  borderColor: 'success.main',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.palette.success.main} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 12l3 3 5-6" />
+                </svg>
+                <Typography sx={{ color: 'success.dark', fontSize: '14px', fontWeight: 600 }}>
+                  This ticket has been {ticket.status.toLowerCase()}. The chat is closed.
+                </Typography>
+              </Box>
+            ) : needsAccept ? (
               <Button
                 fullWidth
                 variant="contained"

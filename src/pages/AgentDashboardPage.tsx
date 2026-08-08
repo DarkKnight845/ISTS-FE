@@ -160,15 +160,6 @@ function AgentDashboardPage() {
               Manage assigned tickets and pick up open requests.
             </Typography>
           </Box>
-
-          <DateRangeFilter
-            start={fromDate}
-            end={toDate}
-            onChange={(start, end) => {
-              setFromDate(start);
-              setToDate(end);
-            }}
-          />
         </Box>
 
         <Box sx={{ mb: 5 }}>
@@ -189,7 +180,23 @@ function AgentDashboardPage() {
             mb: 3,
           }}
         >
-          <TicketFilterBar tabs={FILTER_TABS} activeTab={activeTab} onChange={setActiveTab} search={search} onSearchChange={setSearch} />
+          <TicketFilterBar
+            tabs={FILTER_TABS}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            search={search}
+            onSearchChange={setSearch}
+            dateFilter={
+              <DateRangeFilter
+                start={fromDate}
+                end={toDate}
+                onChange={(start, end) => {
+                  setFromDate(start);
+                  setToDate(end);
+                }}
+              />
+            }
+          />
         </Box>
 
         <Box sx={{ minHeight: 0 }}>

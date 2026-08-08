@@ -20,6 +20,7 @@ import {
   createSLARequest,
   getSLAByDepartmentRequest,
   updateSLARequest,
+  invalidateCache,
   type SLAPriorityInput,
   type TicketPriority,
 } from '@/lib/api';
@@ -46,47 +47,45 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [exists, setExists] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadRules = async () => {
     setLoading(true);
     setError(null);
     setSaveError(null);
     setSuccess(null);
-    setExists(false);
 
-    getSLAByDepartmentRequest(departmentId)
-      .then((response) => {
-        if (cancelled) return;
-        const existing = response.slas ?? [];
-        if (existing.length > 0) {
-          const mapped = PRIORITIES.map((priority) => {
-            const found = existing.find((r) => r.priority === priority);
-            return {
-              priority,
-              responseTimeMinutes: found?.responseTimeMinutes ?? 15,
-              resolutionTimeMinutes: found?.resolutionTimeMinutes ?? 60,
-            };
-          });
-          setRules(mapped);
-          setExists(true);
-        } else {
-          setRules(DEFAULT_RULES);
-          setExists(false);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setRules(DEFAULT_RULES);
-          setError(err instanceof Error ? err.message : 'Failed to load SLA rules');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    // Bypass any stale in-memory cache for this department's SLA rules.
+    invalidateCache(`/api/sla/${departmentId}`);
 
-    return () => {
-      cancelled = true;
-    };
+    try {
+      const response = await getSLAByDepartmentRequest(departmentId);
+      const existing = response.slas ?? [];
+      if (existing.length > 0) {
+        const mapped = PRIORITIES.map((priority) => {
+          const found = existing.find((r) => r.priority === priority);
+          return {
+            priority,
+            responseTimeMinutes: found?.responseTimeMinutes ?? 15,
+            resolutionTimeMinutes: found?.resolutionTimeMinutes ?? 60,
+          };
+        });
+        setRules(mapped);
+        setExists(true);
+      } else {
+        setRules(DEFAULT_RULES);
+        setExists(false);
+      }
+    } catch (err) {
+      setRules(DEFAULT_RULES);
+      setExists(false);
+      setError(err instanceof Error ? err.message : 'Failed to load SLA rules');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departmentId]);
 
   const handleChange = (priority: TicketPriority, field: keyof SLAPriorityInput, value: string) => {
@@ -133,7 +132,16 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       setExists(true);
       setSuccess('SLA rules saved successfully.');
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save SLA rules');
+      const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
+      // If the backend says rules already exist, flip to update mode and reload
+      // so the user can save again without seeing the same error.
+      if (message.toLowerCase().includes('already exists')) {
+        setExists(true);
+        setSaveError(`${message} Click "Update SLA rules" to overwrite the existing configuration.`);
+        loadRules();
+      } else {
+        setSaveError(message);
+      }
     } finally {
       setSaving(false);
     }

@@ -18,7 +18,6 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import LineChart from '@/components/analytics/LineChart';
 import DonutChart from '@/components/analytics/DonutChart';
 import BarChart from '@/components/analytics/BarChart';
-import SlaGauge from '@/components/analytics/SlaGauge';
 import InsightCard from '@/components/analytics/InsightCard';
 import DateRangeFilter from '@/components/DateRangeFilter';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
@@ -167,24 +166,11 @@ function AnalyticsPage() {
         </Box>
       </Box>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
-          gap: '24px',
-          mb: 4,
-        }}
-      >
+      <Box sx={{ mb: 4 }}>
         <LineChart
           data={analytics.weeklyVolume}
           title="Ticket volume"
           subtitle="Received vs resolved over the last 7 weeks"
-        />
-        <SlaGauge
-          value={analytics.slaCompliancePercentage}
-          title="SLA compliance"
-          subtitle="Percentage of tickets resolved within SLA"
-          caption={slaCaption}
         />
       </Box>
 

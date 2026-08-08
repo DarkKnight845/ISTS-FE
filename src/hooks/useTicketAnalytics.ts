@@ -34,6 +34,10 @@ export function useTicketAnalytics(filters?: AnalyticsFilters): UseTicketAnalyti
 
   useEffect(() => {
     fetchAnalytics();
+    const interval = setInterval(() => {
+      fetchAnalytics();
+    }, 15000);
+    return () => clearInterval(interval);
   }, [filters?.fromDate, filters?.toDate]);
 
   return { analytics, loading, error, refetch: fetchAnalytics };

@@ -4,13 +4,13 @@ import { istsIcon } from "@/assets/img";
 import LoginForm from "./sections/LoginForm";
 
 const QUOTES = [
-  "Turning IT support into a seamless experience.",
+  "Turning support into a seamless experience.",
   "Every ticket is a step toward a smoother workflow.",
-  "Fast, organized, reliable IT service starts here.",
+  "Fast, organized, reliable service starts here.",
   "Where complex issues meet simple solutions.",
-  "Your technology problems, resolved with precision.",
+  "Your toughest problems, resolved with precision.",
   "Empowering teams through smarter support.",
-  "Keeping the digital engine running, one ticket at a time.",
+  "Keeping operations running, one ticket at a time.",
 ];
 
 function LoginPage() {
@@ -96,7 +96,7 @@ function LoginPage() {
               mb: 2,
             }}
           >
-            IT Support,
+            Support,
             <br />
             Simplified.
           </Typography>

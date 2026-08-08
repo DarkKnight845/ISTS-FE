@@ -31,6 +31,10 @@ export function useTickets(filters?: GetTicketsFilters): UseTicketsResult {
 
   useEffect(() => {
     fetchTickets();
+    const interval = setInterval(() => {
+      fetchTickets();
+    }, 10000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)]);
 
