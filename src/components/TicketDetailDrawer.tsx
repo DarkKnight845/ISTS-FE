@@ -418,12 +418,6 @@ function TicketDetailDrawer({
             </Box>
           </Box>
 
-          <Box sx={{ px: 3, py: 2, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
-            <DetailRow label="Priority" value={ticket.priority} />
-            <DetailRow label="Assigned to" value={ticket.assigned ?? 'Unassigned'} />
-            <DetailRow label="Created" value={ticket.createdAt} />
-          </Box>
-
           {canRate && (
             <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
