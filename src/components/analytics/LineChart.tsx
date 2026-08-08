@@ -17,8 +17,8 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
     point: WeeklyPoint;
   } | null>(null);
   const width = 600;
-  const height = 170;
-  const padding = { top: 30, right: 24, bottom: 40, left: 44 };
+  const height = 140;
+  const padding = { top: 22, right: 24, bottom: 32, left: 44 };
 
   const maxValue = Math.max(...data.map((d) => Math.max(d.received, d.resolved)), 1);
   const chartWidth = width - padding.left - padding.right;
@@ -109,7 +109,7 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
             return (
               <g key={ratio}>
                 <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke={theme.palette.divider} strokeWidth={1} />
-                <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill={theme.palette.text.secondary}>
+                <text x={padding.left - 8} y={y + 3} textAnchor="end" fontSize="10" fill={theme.palette.text.secondary}>
                   {Math.round(maxValue * ratio)}
                 </text>
               </g>
@@ -121,9 +121,9 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
             <text
               key={d.label}
               x={xForIndex(i)}
-              y={height - 12}
+              y={height - 10}
               textAnchor="middle"
-              fontSize="12"
+              fontSize="10"
               fill={theme.palette.text.secondary}
             >
               {d.label}
