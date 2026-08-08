@@ -189,9 +189,14 @@ function ManagerDashboardPage() {
             gap: 2,
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 500, color: 'text.primary' }}>
-            Manager Dashboard
-          </Typography>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              Manager Dashboard
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mt: 0.5, fontSize: '14px' }}>
+              Monitor team workload, SLA health, and reassign tickets as needed.
+            </Typography>
+          </Box>
 
         </Box>
 
