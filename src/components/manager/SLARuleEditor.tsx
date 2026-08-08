@@ -49,6 +49,18 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   const [info, setInfo] = useState<string | null>(null);
   const [exists, setExists] = useState(false);
 
+  // System.Text.Json default naming policy is camelCase, so a C# property named
+  // `SLAs` serializes as `slAs`. Read every plausible key so we don't miss it.
+  const extractRules = (response: SLARulesResponse): SLARuleDto[] => {
+    const candidates = [
+      response.slas,
+      response.SLAs,
+      (response as Record<string, SLARuleDto[] | undefined>).slAs,
+      (response as Record<string, SLARuleDto[] | undefined>)['sLAs'],
+    ];
+    return candidates.find((c) => Array.isArray(c) && c.length > 0) ?? [];
+  };
+
   const loadRules = async () => {
     setLoading(true);
     setError(null);
@@ -61,7 +73,8 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
 
     try {
       const response = await getSLAByDepartmentRequest(departmentId);
-      const existing = response.slas ?? response.SLAs ?? [];
+      console.log('[SLA] GET response:', response);
+      const existing = extractRules(response);
       if (existing.length > 0) {
         const mapped = PRIORITIES.map((priority) => {
           const found = existing.find((r) => r.priority === priority);
@@ -78,6 +91,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
         setExists(false);
       }
     } catch (err) {
+      console.error('[SLA] GET failed:', err);
       setRules(DEFAULT_RULES);
       setExists(false);
       setError(err instanceof Error ? err.message : 'Failed to load SLA rules');
@@ -139,7 +153,8 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       // then, or the flag may be stale. A fresh GET lets us pick the correct
       // method and avoids the 409 Conflict from POSTing over existing rules.
       const fresh = await getSLAByDepartmentRequest(departmentId);
-      const hasExistingRules = (fresh.slas ?? fresh.SLAs ?? []).length > 0;
+      console.log('[SLA] pre-save GET:', fresh);
+      const hasExistingRules = extractRules(fresh).length > 0;
       setExists(hasExistingRules);
 
       if (hasExistingRules) {
@@ -156,7 +171,25 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
       const status = (err as Error & { status?: number }).status;
-      setSaveError(`${message}${status ? ` (HTTP ${status})` : ''}`);
+
+      // Safety net: if the backend still reports a conflict, rules exist but
+      // our GET detection failed. Retry with PATCH so the user's changes apply.
+      if (status === 409 || message.toLowerCase().includes('already exists')) {
+        setInfo('Rules already exist on the server. Retrying as update…');
+        try {
+          await updateSLARequest(payload);
+          setExists(true);
+          setInfo(null);
+          setSuccess('SLA rules updated successfully.');
+          await loadRules();
+        } catch (retryErr) {
+          const retryMessage = retryErr instanceof Error ? retryErr.message : 'Retry failed';
+          const retryStatus = (retryErr as Error & { status?: number }).status;
+          setSaveError(`${retryMessage}${retryStatus ? ` (HTTP ${retryStatus})` : ''}`);
+        }
+      } else {
+        setSaveError(`${message}${status ? ` (HTTP ${status})` : ''}`);
+      }
     } finally {
       setSaving(false);
     }
