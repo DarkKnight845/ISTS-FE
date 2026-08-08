@@ -147,6 +147,8 @@ export interface SLARuleDto {
 export interface SLARulesResponse {
   departmentId: string;
   slas: SLARuleDto[];
+  /** Backend returns the list as `SLAs` (PascalCase). Keep both for safety. */
+  SLAs?: SLARuleDto[];
 }
 
 export interface CreateSLARequest {

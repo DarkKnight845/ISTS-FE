@@ -61,7 +61,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
 
     try {
       const response = await getSLAByDepartmentRequest(departmentId);
-      const existing = response.slas ?? [];
+      const existing = response.slas ?? response.SLAs ?? [];
       if (existing.length > 0) {
         const mapped = PRIORITIES.map((priority) => {
           const found = existing.find((r) => r.priority === priority);
@@ -139,7 +139,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       // then, or the flag may be stale. A fresh GET lets us pick the correct
       // method and avoids the 409 Conflict from POSTing over existing rules.
       const fresh = await getSLAByDepartmentRequest(departmentId);
-      const hasExistingRules = (fresh.slas ?? []).length > 0;
+      const hasExistingRules = (fresh.slas ?? fresh.SLAs ?? []).length > 0;
       setExists(hasExistingRules);
 
       if (hasExistingRules) {
