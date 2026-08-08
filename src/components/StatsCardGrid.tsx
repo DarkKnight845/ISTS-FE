@@ -17,7 +17,7 @@ interface StatsCardGridProps {
 /**
  * Grid of four KPI stat cards.
  */
-const brandBlue = '#2559AA';
+const brandBlue = '#2563EB';
 
 function StatsCardGrid({
   assignedToMe,
@@ -60,7 +60,7 @@ function StatsCardGrid({
       value: unassigned ?? 0,
       trend: 'Open tickets awaiting agent',
       icon: <TicketBlueIcon size={20} />,
-      iconBg: '#FFFFFF',
+      iconBg: '#F3F4F6',
     },
   ];
 

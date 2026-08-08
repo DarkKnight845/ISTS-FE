@@ -343,8 +343,8 @@ function StaffDashboardPage() {
             <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
               Staff Dashboard
             </Typography>
-            <Typography sx={{ color: 'text.secondary', mt: 0.5 }}>
-              Manage all your tickets
+            <Typography sx={{ color: 'text.secondary', mt: 0.5, fontSize: '14px' }}>
+              Raise, track, and manage your support tickets.
             </Typography>
           </Box>
         </Box>

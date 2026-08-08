@@ -17,7 +17,7 @@ interface StatsGridProps {
   onSlaClick: () => void;
 }
 
-const brandBlue = '#2559AA';
+const brandBlue = '#2563EB';
 const urgentRed = '#DC2626';
 
 function StatsGrid({
@@ -32,40 +32,46 @@ function StatsGrid({
 
   const cards = [
     {
-      title: 'Total open tickets',
+      title: 'Open tickets',
       value: openTickets,
-      trend: 'Active tickets',
+      trend: 'Currently active',
+      trendUp: undefined as boolean | undefined,
       icon: <TicketSubmittedIcon size={20} />,
-      iconBg: brandBlue,
+      iconBg: '#DBEAFE',
     },
     {
       title: 'Resolved',
       value: resolved,
-      trend: 'Tickets resolved',
+      trend: 'Tickets closed',
+      trendUp: undefined as boolean | undefined,
       icon: <TicketResolvedIcon size={20} />,
-      iconBg: '#86EFAC',
+      iconBg: '#D1FAE5',
     },
     {
       title: 'Unassigned',
       value: unassigned,
-      trend: 'Awaiting assignment',
+      trend: 'Awaiting agent',
+      trendUp: undefined as boolean | undefined,
       icon: <TicketUrgentIcon size={20} />,
-      iconBg: brandBlue,
+      iconBg: '#FEF3C7',
     },
     {
       title: 'SLA breaches',
       value: slaBreaches,
-      trend: slaBreaches === 0 ? 'No tickets past SLA' : `${slaBreaches} ticket${slaBreaches === 1 ? '' : 's'} past SLA`,
+      trend: slaBreaches === 0 ? 'On track' : `${slaBreaches} ticket${slaBreaches === 1 ? '' : 's'} past SLA`,
+      trendUp: slaBreaches === 0,
       icon: <SlaBreachIcon color={breachUrgent ? urgentRed : '#DC2626'} />,
-      iconBg: '#FECACA',
-      valueColor: breachUrgent ? urgentRed : undefined,
+      iconBg: '#FEE2E2',
+      valueColor: breachUrgent ? urgentRed : slaBreaches > 0 ? '#DC2626' : undefined,
     },
     {
-      title: 'SLA Compliance',
+      title: 'SLA compliance',
       value: `${slaCompliance}%`,
       trend: 'Resolved within SLA',
-      icon: <SlaComplianceIcon color="#2559AA" />,
+      trendUp: slaCompliance >= 90,
+      icon: <SlaComplianceIcon color={brandBlue} />,
       iconBg: '#DBEAFE',
+      valueColor: slaCompliance < 75 ? '#DC2626' : undefined,
     },
   ];
 

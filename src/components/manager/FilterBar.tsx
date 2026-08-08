@@ -1,6 +1,7 @@
 import { Box, Button, FormControl, InputBase, MenuItem, Select, Typography, useTheme } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 interface FilterBarProps {
   search: string;
@@ -15,23 +16,6 @@ interface FilterBarProps {
   onClear: () => void;
 }
 
-const getSelectSx = (theme: any) => ({
-  height: '40px',
-  borderRadius: '8px',
-  backgroundColor: theme.palette.background.paper,
-  border: `1px solid ${theme.palette.divider}`,
-  '& .MuiSelect-select': {
-    py: '8px',
-    px: '12px',
-    fontSize: '14px',
-    color: theme.palette.text.primary,
-  },
-  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-  '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
-  '& .MuiSvgIcon-root': { color: theme.palette.text.secondary },
-});
-
 function FilterBar({
   search,
   onSearchChange,
@@ -45,7 +29,25 @@ function FilterBar({
   onClear,
 }: FilterBarProps) {
   const theme = useTheme();
-  const selectSx = getSelectSx(theme);
+
+  const selectSx = {
+    height: '40px',
+    borderRadius: '10px',
+    backgroundColor: 'background.paper',
+    border: `1px solid ${theme.palette.divider}`,
+    '& .MuiSelect-select': {
+      py: '8px',
+      px: '12px',
+      fontSize: '14px',
+      color: theme.palette.text.primary,
+      fontWeight: 500,
+    },
+    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
+    '& .MuiSvgIcon-root': { color: theme.palette.text.secondary },
+  };
+
   return (
     <Box
       sx={{
@@ -54,16 +56,16 @@ function FilterBar({
         gap: '16px',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: 'background.paper',
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: '12px',
+        borderRadius: '16px',
         p: '16px',
       }}
     >
       <Box
         sx={{
           position: 'relative',
-          width: { xs: '100%', sm: '320px' },
+          width: { xs: '100%', sm: '360px' },
           height: '40px',
         }}
       >
@@ -88,34 +90,36 @@ function FilterBar({
             height: '100%',
             pl: '40px',
             pr: '12px',
-            borderRadius: '8px',
-            backgroundColor: theme.palette.background.paper,
+            borderRadius: '10px',
+            backgroundColor: 'background.paper',
             border: `1px solid ${theme.palette.divider}`,
             fontSize: '14px',
             '& input::placeholder': { color: theme.palette.text.disabled, opacity: 1 },
+            '&:hover, &.Mui-focused': {
+              borderColor: theme.palette.primary.main,
+            },
           }}
         />
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-        <FormControl sx={{ minWidth: 150 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', mb: '4px' }}>
-            Status
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <FilterListIcon sx={{ color: 'text.secondary', width: 18, height: 18 }} />
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', fontWeight: 600 }}>Filters:</Typography>
+        </Box>
+
+        <FormControl sx={{ minWidth: 140 }}>
           <Select value={status} onChange={(e: SelectChangeEvent) => onStatusChange(e.target.value)} sx={selectSx}>
-            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="All">All statuses</MenuItem>
             <MenuItem value="Open">Open</MenuItem>
             <MenuItem value="Ongoing">Ongoing</MenuItem>
             <MenuItem value="Resolved">Resolved</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl sx={{ minWidth: 150 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', mb: '4px' }}>
-            Priority
-          </Typography>
+        <FormControl sx={{ minWidth: 140 }}>
           <Select value={priority} onChange={(e: SelectChangeEvent) => onPriorityChange(e.target.value)} sx={selectSx}>
-            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="All">All priorities</MenuItem>
             <MenuItem value="Urgent">Urgent</MenuItem>
             <MenuItem value="High">High</MenuItem>
             <MenuItem value="Medium">Medium</MenuItem>
@@ -124,11 +128,8 @@ function FilterBar({
         </FormControl>
 
         <FormControl sx={{ minWidth: 150 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', mb: '4px' }}>
-            Assigned to
-          </Typography>
           <Select value={assignedTo} onChange={(e: SelectChangeEvent) => onAssignedChange(e.target.value)} sx={selectSx}>
-            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="All">All agents</MenuItem>
             {assignedOptions.map((name) => (
               <MenuItem key={name} value={name}>
                 {name}
@@ -143,16 +144,15 @@ function FilterBar({
           sx={{
             height: '40px',
             textTransform: 'none',
-            borderRadius: '8px',
+            borderRadius: '10px',
             borderColor: theme.palette.divider,
             color: 'text.secondary',
-            fontWeight: 500,
-            px: '20px',
-            alignSelf: 'flex-end',
+            fontWeight: 600,
+            px: '18px',
             '&:hover': { backgroundColor: theme.palette.action.hover, borderColor: theme.palette.divider },
           }}
         >
-          Clear filters
+          Clear
         </Button>
       </Box>
     </Box>

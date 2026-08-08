@@ -5,9 +5,11 @@ import {
   Box,
   CircularProgress,
   FormControl,
+  Paper,
   TextField,
   Typography,
 } from '@mui/material';
+import BusinessIcon from '@mui/icons-material/Business';
 import PageHeader from '@/components/layout/PageHeader';
 import SLARuleEditor from '@/components/manager/SLARuleEditor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -27,9 +29,7 @@ function SLASettingsPage() {
 
     getDepartmentsRequest()
       .then((data) => {
-        if (!cancelled) {
-          setDepartments(data ?? []);
-        }
+        if (!cancelled) setDepartments(data ?? []);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -45,7 +45,6 @@ function SLASettingsPage() {
     };
   }, []);
 
-  // Default to the manager's own department once user and departments are loaded.
   useEffect(() => {
     if (user?.departmentId && departments.length > 0 && !selectedDepartment) {
       const match = departments.find((d) => d.id === user.departmentId);
@@ -74,48 +73,72 @@ function SLASettingsPage() {
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
             SLA Rules
           </Typography>
-          <Typography sx={{ color: 'text.secondary', mt: 0.5 }}>
+          <Typography sx={{ color: 'text.secondary', mt: 0.5, fontSize: '14px' }}>
             Configure response and resolution targets for each priority in a department.
           </Typography>
         </Box>
 
         {(userError || departmentsError) && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: '10px' }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>
             {userError || departmentsError}
           </Alert>
         )}
 
-        <FormControl fullWidth sx={{ mb: 4, maxWidth: 420 }}>
+        <Paper
+          sx={{
+            p: '20px',
+            mb: 4,
+            borderRadius: '16px',
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
+            maxWidth: 520,
+          }}
+        >
+          <BusinessIcon sx={{ color: 'text.secondary', width: 22, height: 22 }} />
+          <Typography sx={{ color: 'text.secondary', fontSize: '14px', fontWeight: 500 }}>Department:</Typography>
+
           {isLoading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1 }}>
-              <CircularProgress size={20} sx={{ color: 'primary.main' }} />
-              <Typography sx={{ color: 'text.secondary', fontSize: '14px' }}>Loading departments…</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <CircularProgress size={18} sx={{ color: 'primary.main' }} />
+              <Typography sx={{ color: 'text.secondary', fontSize: '14px' }}>Loading…</Typography>
             </Box>
           ) : (
-            <Autocomplete
-              options={departments}
-              getOptionLabel={(option) => option.name}
-              value={selectedDepartment}
-              onChange={(_, value) => setSelectedDepartment(value)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Department"
-                  placeholder="Select a department"
-                  size="small"
-                />
-              )}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              fullWidth
-              disableClearable={departments.length > 0}
-            />
+            <FormControl sx={{ minWidth: 280, flex: 1 }}>
+              <Autocomplete
+                options={departments}
+                getOptionLabel={(option) => option.name}
+                value={selectedDepartment}
+                onChange={(_, value) => setSelectedDepartment(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Select a department"
+                    size="small"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '10px',
+                        backgroundColor: 'background.paper',
+                      },
+                    }}
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                disableClearable={departments.length > 0}
+                fullWidth
+              />
+            </FormControl>
           )}
-        </FormControl>
+        </Paper>
 
         {selectedDepartment ? (
           <SLARuleEditor departmentId={selectedDepartment.id} />
         ) : !isLoading ? (
-          <Alert severity="info" sx={{ borderRadius: '10px' }}>
+          <Alert severity="info" sx={{ borderRadius: '12px' }}>
             Please select a department to view or configure its SLA rules.
           </Alert>
         ) : null}

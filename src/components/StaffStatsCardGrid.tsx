@@ -16,7 +16,7 @@ interface StaffStatsCardGridProps {
  * Grid of four KPI stat cards for the staff dashboard.
  * Cards lift on hover (inherited from the shared StatCard).
  */
-const brandBlue = '#2559AA';
+const brandBlue = '#2563EB';
 
 function StaffStatsCardGrid({
   submitted = 0,

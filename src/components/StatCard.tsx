@@ -5,16 +5,14 @@ interface StatCardProps {
   title: string;
   value: string | number;
   trend: string;
-  /** True when the trend is positive/upward. Omit for a plain caption with no arrow. */
   trendUp?: boolean;
   icon: React.ReactNode;
   iconBg: string;
-  /** Optional color for the main value text. */
   valueColor?: string;
 }
 
 /**
- * KPI stat card matching the dashboard design.
+ * KPI stat card for the modern enterprise dashboard.
  */
 function StatCard({ title, value, trend, trendUp, icon, iconBg, valueColor }: StatCardProps) {
   const hasTrend = typeof trendUp === 'boolean';
@@ -22,11 +20,7 @@ function StatCard({ title, value, trend, trendUp, icon, iconBg, valueColor }: St
     <Card
       sx={{
         width: '100%',
-        borderRadius: '16px',
-        border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: 'none',
-        p: '24px',
+        p: '22px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -34,14 +28,15 @@ function StatCard({ title, value, trend, trendUp, icon, iconBg, valueColor }: St
         boxSizing: 'border-box',
         backgroundColor: 'background.paper',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        cursor: 'default',
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          boxShadow: 4,
         },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 6 }}>
-        <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, fontSize: '14px' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '13px' }}>
           {title}
         </Typography>
         <Box
@@ -64,11 +59,11 @@ function StatCard({ title, value, trend, trendUp, icon, iconBg, valueColor }: St
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 600,
+            fontWeight: 700,
             color: valueColor || 'text.primary',
-            fontSize: '32px',
+            fontSize: '30px',
             lineHeight: 1.2,
-            transition: 'color 0.2s ease',
+            letterSpacing: '-0.02em',
           }}
         >
           {value}
@@ -87,7 +82,7 @@ function StatCard({ title, value, trend, trendUp, icon, iconBg, valueColor }: St
             variant="caption"
             sx={{
               color: hasTrend ? (trendUp ? 'success.main' : 'error.main') : 'text.secondary',
-              fontWeight: 500,
+              fontWeight: 600,
               fontSize: '12px',
             }}
           >

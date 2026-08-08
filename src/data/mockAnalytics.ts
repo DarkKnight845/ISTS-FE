@@ -21,7 +21,7 @@ export interface Insight {
   label: string;
   value: string;
   change: string;
-  changeUp: boolean;
+  changeUp?: boolean;
 }
 
 export const weeklyTrend: WeeklyPoint[] = [

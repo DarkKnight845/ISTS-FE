@@ -1,4 +1,4 @@
-import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, List, ListItemButton, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
 import { NavLink, useLocation } from 'react-router-dom';
 import { istsIcon } from '@/assets/img';
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +30,8 @@ function getNavItems(role: string | null): NavItem[] {
   return items;
 }
 
+const SIDEBAR_WIDTH = 260;
+
 function Sidebar() {
   const { role } = useAuth();
   const location = useLocation();
@@ -37,15 +39,14 @@ function Sidebar() {
 
   return (
     <>
-      <Box sx={{ width: 260, flexShrink: 0 }} />
+      <Box sx={{ width: SIDEBAR_WIDTH, flexShrink: 0 }} />
 
       <Box
         sx={{
-          width: 260,
+          width: SIDEBAR_WIDTH,
           flexShrink: 0,
-          px: 2,
-          py: 3,
-          backgroundColor: 'primary.main',
+          backgroundColor: 'nav.main',
+          color: 'nav.contrastText',
           height: '100vh',
           display: 'flex',
           flexDirection: 'column',
@@ -53,49 +54,84 @@ function Sidebar() {
           top: 0,
           left: 0,
           overflowY: 'auto',
+          borderRight: '1px solid',
+          borderColor: 'rgba(255,255,255,0.08)',
         }}
       >
-        <Box sx={{ mb: 4, px: 1 }}>
+        <Box sx={{ px: 3, py: 3.5, mb: 1 }}>
           <Box
             component="img"
             src={istsIcon}
             alt="ISTS Logo"
-            sx={{ height: 50, width: 'auto', display: 'block' }}
+            sx={{ height: 46, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}
           />
         </Box>
 
-        <List sx={{ flexGrow: 1, overflowY: 'auto', px: 0 }}>
+        <List sx={{ flexGrow: 1, overflowY: 'auto', px: 2, py: 0 }}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <ListItemButton
-                key={item.path}
-                component={NavLink}
-                to={item.path}
-                sx={{
-                  borderRadius: '8px',
-                  mb: 1,
-                  px: 1.5,
-                  py: 1,
-                  color: isActive ? 'primary.contrastText' : 'rgba(255,255,255,0.85)',
-                  backgroundColor: isActive ? 'primary.dark' : 'transparent',
-                  textDecoration: 'none',
-                  '&:hover': {
-                    backgroundColor: isActive ? 'primary.dark' : 'rgba(255,255,255,0.1)',
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  slotProps={{
-                    primary: { sx: { fontSize: 14, fontWeight: isActive ? 600 : 500 } },
+              <Tooltip key={item.path} title={item.label} placement="right" arrow>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  sx={{
+                    borderRadius: '10px',
+                    mb: 0.75,
+                    px: 1.5,
+                    py: 1.25,
+                    color: isActive ? 'nav.contrastText' : 'rgba(255,255,255,0.65)',
+                    backgroundColor: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    textDecoration: 'none',
+                    transition: 'all 0.18s ease',
+                    position: 'relative',
+                    '&:hover': {
+                      backgroundColor: isActive ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
+                      color: 'nav.contrastText',
+                    },
+                    '&::before': isActive
+                      ? {
+                          content: '""',
+                          position: 'absolute',
+                          left: -8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 3,
+                          height: 22,
+                          borderRadius: '0 4px 4px 0',
+                          backgroundColor: 'primary.main',
+                        }
+                      : {},
                   }}
-                />
-              </ListItemButton>
+                >
+                  <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>{item.icon}</ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    slotProps={{
+                      primary: { sx: { fontSize: 14, fontWeight: isActive ? 600 : 500 } },
+                    }}
+                  />
+                </ListItemButton>
+              </Tooltip>
             );
           })}
         </List>
+
+        <Box sx={{ px: 3, py: 2 }}>
+          <Box
+            sx={{
+              px: 2,
+              py: 1.5,
+              borderRadius: '10px',
+              backgroundColor: 'rgba(255,255,255,0.06)',
+              border: '1px solid',
+              borderColor: 'rgba(255,255,255,0.08)',
+            }}
+          >
+            <Box sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', mb: 0.25 }}>ISTS Version</Box>
+            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'nav.contrastText' }}>1.0.0</Box>
+          </Box>
+        </Box>
       </Box>
     </>
   );

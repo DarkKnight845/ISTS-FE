@@ -150,26 +150,26 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   return (
     <Box>
       {error && (
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: '10px' }}>
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: '12px' }}>
           {error}
         </Alert>
       )}
 
       {saveError && (
-        <Alert severity="error" sx={{ mb: 3, borderRadius: '10px' }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>
           {saveError}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 3, borderRadius: '10px' }}>
+        <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>
           {success}
         </Alert>
       )}
 
       <Paper
         sx={{
-          borderRadius: '12px',
+          borderRadius: '16px',
           border: '1px solid',
           borderColor: 'divider',
           boxShadow: 'none',
@@ -186,10 +186,12 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
                     key={header}
                     sx={{
                       fontWeight: 600,
-                      fontSize: '13px',
+                      fontSize: '12px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
                       color: 'text.secondary',
                       borderBottom: `1px solid ${theme.palette.divider}`,
-                      py: '12px',
+                      py: '14px',
                     }}
                   >
                     {header}
@@ -203,7 +205,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
                   <TableCell
                     sx={{
                       fontSize: '14px',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       color: 'text.primary',
                       borderBottom: `1px solid ${theme.palette.divider}`,
                       width: 160,
@@ -251,9 +253,10 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
           disabled={saving || loading}
           sx={{
             textTransform: 'none',
-            fontWeight: 500,
-            borderRadius: '8px',
+            fontWeight: 600,
+            borderRadius: '10px',
             px: 3,
+            py: 1,
             boxShadow: 'none',
           }}
         >

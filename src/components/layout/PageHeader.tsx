@@ -25,7 +25,6 @@ import type { NotificationDto } from '@/lib/api';
 import { BellIcon, LogoutIcon, MoonIcon, SunIcon } from '@/components/icons';
 
 interface PageHeaderProps {
-  /** Show the department chip (used by staff/manager; hidden for agents). */
   showDepartmentChip?: boolean;
 }
 
@@ -45,9 +44,6 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
   const { openTicket } = useTicketDrawer();
   const { notificationConnection } = useSignalR();
 
-  // Live updates: when the server pushes a Notification event over SignalR,
-  // prepend it to the local list so the bell and badge reflect it without a
-  // page reload.
   useEffect(() => {
     if (!notificationConnection) return;
     const handler = (notification: NotificationDto) => addNotification(notification);
@@ -61,8 +57,6 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
     try {
       await markAsRead(notification.id);
     } finally {
-      // Drop the row from the menu regardless of the network result — once
-      // the user has acted, the row is no longer useful in the list.
       removeNotification(notification.id);
     }
     handleNotifClose();
@@ -81,7 +75,6 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
 
   const handleNotifOpen = (e: React.MouseEvent<HTMLElement>) => setNotifAnchorEl(e.currentTarget);
   const handleNotifClose = () => setNotifAnchorEl(null);
-
   const handleProfileOpen = (e: React.MouseEvent<HTMLElement>) => setProfileAnchorEl(e.currentTarget);
   const handleProfileClose = () => setProfileAnchorEl(null);
 
@@ -95,10 +88,10 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         alignItems: 'center',
         px: 4,
-        py: 2,
+        py: 2.5,
         backgroundColor: 'background.paper',
         borderBottom: '1px solid',
         borderColor: 'divider',
@@ -109,20 +102,32 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
         {showDepartmentChip && (
           <Chip
             label={department}
+            size="small"
             sx={{
               backgroundColor: 'primary.main',
               color: 'primary.contrastText',
-              fontWeight: 500,
+              fontWeight: 600,
               fontSize: 12,
               borderRadius: '20px',
               px: 0.5,
             }}
           />
         )}
+      </Box>
 
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <IconButton
           onClick={handleNotifOpen}
-          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '10px', color: 'text.secondary' }}
+          sx={{
+            width: 40,
+            height: 40,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '10px',
+            color: 'text.secondary',
+            backgroundColor: 'background.paper',
+            '&:hover': { backgroundColor: 'action.hover' },
+          }}
           aria-label="Notifications"
         >
           <Badge badgeContent={unreadCount} color="error" overlap="circular">
@@ -142,6 +147,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
                 borderRadius: '12px',
                 mt: 1,
                 backgroundColor: 'background.paper',
+                boxShadow: 4,
               },
             },
           }}
@@ -158,9 +164,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
             </Box>
           ) : !notifications?.length ? (
             <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
-              <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
-                No notifications yet.
-              </Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>No notifications yet.</Typography>
             </Box>
           ) : (
             notifications.map((n) => (
@@ -199,9 +203,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
                       />
                     )}
                   </Box>
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 0.5 }}>
-                    {n.message}
-                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 0.5 }}>{n.message}</Typography>
                   <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
                     {new Date(n.createdAt).toLocaleString()}
                   </Typography>
@@ -221,7 +223,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            gap: 1.25,
             pl: 1,
             pr: 1.5,
             py: 0.5,
@@ -235,10 +237,10 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
             '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
           }}
         >
-          <Avatar sx={{ width: 28, height: 28, fontSize: 12, backgroundColor: 'warning.main' }}>
+          <Avatar sx={{ width: 30, height: 30, fontSize: 12, backgroundColor: 'warning.main', color: '#fff' }}>
             {initials}
           </Avatar>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: 13 }}>
             {displayName}
           </Typography>
         </Box>
@@ -256,18 +258,15 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
                 mt: 1,
                 borderRadius: '12px',
                 backgroundColor: 'background.paper',
+                boxShadow: 4,
               },
             },
           }}
         >
           <Box sx={{ px: 2, py: 1.5 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: 14, color: 'text.primary' }}>
-              {displayName}
-            </Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: 14, color: 'text.primary' }}>{displayName}</Typography>
             {user?.email && (
-              <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                {user.email}
-              </Typography>
+              <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{user.email}</Typography>
             )}
           </Box>
 

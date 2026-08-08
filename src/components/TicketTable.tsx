@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   IconButton,
   Table,
@@ -19,11 +20,8 @@ import type { Ticket, TicketPriority, TicketStatus } from '@/components/ui/types
 interface TicketTableProps {
   tickets: Ticket[];
   onSelect: (ticket: Ticket) => void;
-  /** When provided, render an Edit button per row. */
   onEdit?: (ticket: Ticket) => void;
-  /** When provided, render a Delete button per row. */
   onDelete?: (ticket: Ticket) => void;
-  /** Predicate controlling whether Delete is enabled for a given row. */
   canDelete?: (ticket: Ticket) => boolean;
 }
 
@@ -35,13 +33,23 @@ const statusStyles: Record<TicketStatus, { bg: string; color: string; border: st
   Waiting: { bg: '#D7EBFF', color: '#1565C0', border: '#1565C0' },
 };
 
-const priorityColors: Record<TicketPriority, string> = {
-  Urgent: '#DC2626',
-  High: '#F59E0B',
-  Medium: '#3B82F6',
-  Low: '#6B7280',
-  Critical: '#DC2626',
+const priorityStyles: Record<TicketPriority, { dot: string; bg: string; text: string }> = {
+  Urgent: { dot: '#DC2626', bg: '#FEE2E2', text: '#DC2626' },
+  High: { dot: '#F59E0B', bg: '#FEF3C7', text: '#B45309' },
+  Medium: { dot: '#3B82F6', bg: '#ECFDF5', text: '#047857' },
+  Low: { dot: '#6B7280', bg: '#F3F4F6', text: '#374151' },
+  Critical: { dot: '#DC2626', bg: '#FEE2E2', text: '#DC2626' },
 };
+
+function getInitials(name: string | null) {
+  if (!name) return '—';
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 /**
  * Ticket list table with status/priority styling and row selection.
@@ -52,17 +60,17 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
   const headSx = {
     color: theme.palette.text.secondary,
     fontWeight: 600,
-    fontSize: 11,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
     borderBottom: `1px solid ${theme.palette.divider}`,
-    py: 1.5,
+    py: '14px',
   };
   const cellSx = {
-    py: 2.5,
     borderBottom: `1px solid ${theme.palette.divider}`,
     verticalAlign: 'middle',
   };
+
   return (
     <TableContainer
       component={Paper}
@@ -71,46 +79,53 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
         boxShadow: 'none',
         border: `1px solid ${theme.palette.divider}`,
         bgcolor: 'background.paper',
-        overflow: 'visible',
+        overflow: 'hidden',
       }}
     >
-      <Table size="small">
+      <Table size="small" stickyHeader>
         <TableHead sx={{ backgroundColor: 'action.hover' }}>
           <TableRow>
-            <TableCell sx={headSx}>ID & Subject</TableCell>
+            <TableCell sx={headSx}>Ticket</TableCell>
             <TableCell align="center" sx={headSx}>Status</TableCell>
             <TableCell align="center" sx={headSx}>Priority</TableCell>
             <TableCell align="center" sx={headSx}>Assigned</TableCell>
-            <TableCell align="center" sx={headSx}>Time Updated</TableCell>
-            {showActions && (
-              <TableCell align="center" sx={headSx}>Actions</TableCell>
-            )}
+            <TableCell align="center" sx={headSx}>Last updated</TableCell>
+            {showActions && <TableCell align="center" sx={headSx}>Actions</TableCell>}
           </TableRow>
         </TableHead>
 
         <TableBody>
           {tickets.map((ticket) => {
             const status = statusStyles[ticket.status];
+            const priority = priorityStyles[ticket.priority];
             return (
               <TableRow
                 key={`${ticket.id}-${ticket.assigned ?? 'unassigned'}`}
                 onClick={() => onSelect(ticket)}
                 sx={{
                   cursor: 'pointer',
-                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  transition: 'background-color 0.15s ease, box-shadow 0.18s ease',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                    boxShadow: 2,
+                  },
                   '&:last-child td': { borderBottom: 0 },
                 }}
               >
-                <TableCell sx={{ ...cellSx, width: '30%' }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                    TKT-{ticket.id.slice(0, 3).toUpperCase()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    {ticket.subject}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-                    {ticket.createdAt}
-                  </Typography>
+                <TableCell sx={cellSx}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar sx={{ width: 30, height: 30, fontSize: 12, bgcolor: 'action.selected', color: 'text.secondary' }}>
+                      {getInitials(ticket.requester)}
+                    </Avatar>
+                    <Box>
+                      <Typography noWrap sx={{ fontWeight: 600, color: 'text.primary', fontSize: '14px', maxWidth: 260 }}>
+                        {ticket.subject}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                        TKT-{ticket.id.slice(0, 3).toUpperCase()} • {ticket.createdAt}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </TableCell>
 
                 <TableCell align="center" sx={cellSx}>
@@ -119,10 +134,10 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                     sx={{
                       backgroundColor: status.bg,
                       color: status.color,
-                      fontWeight: 500,
+                      fontWeight: 600,
                       fontSize: 12,
-                      height: 28,
-                      borderRadius: '14px',
+                      height: 26,
+                      borderRadius: '13px',
                       px: 1,
                       border: `1px solid ${status.border}`,
                     }}
@@ -130,29 +145,44 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                 </TableCell>
 
                 <TableCell align="center" sx={cellSx}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: priorityColors[ticket.priority],
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
-                      {ticket.priority}
-                    </Typography>
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      px: '10px',
+                      py: '4px',
+                      borderRadius: '999px',
+                      backgroundColor: priority.bg,
+                      color: priority.text,
+                      fontWeight: 600,
+                      fontSize: '12px',
+                    }}
+                  >
+                    <Box sx={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: priority.dot }} />
+                    {ticket.priority}
                   </Box>
                 </TableCell>
 
                 <TableCell align="center" sx={cellSx}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                    {ticket.assigned ?? '--'}
-                  </Typography>
+                  {ticket.assigned ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                      <Avatar sx={{ width: 22, height: 22, fontSize: 9, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+                        {getInitials(ticket.assigned)}
+                      </Avatar>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '13px' }}>
+                        {ticket.assigned}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '13px', fontStyle: 'italic' }}>
+                      Unassigned
+                    </Typography>
+                  )}
                 </TableCell>
 
                 <TableCell align="center" sx={cellSx}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px' }}>
                     {ticket.updatedAt}
                   </Typography>
                 </TableCell>
@@ -165,8 +195,11 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                           size="small"
                           onClick={() => onEdit(ticket)}
                           disabled={ticket.status === 'Resolved' || ticket.status === 'Closed'}
-                          sx={{ color: 'text.secondary' }}
                           aria-label="Edit ticket"
+                          sx={{
+                            color: 'text.secondary',
+                            '&:hover': { color: 'primary.main', backgroundColor: 'action.hover' },
+                          }}
                         >
                           <EditOutlinedIcon fontSize="small" />
                         </IconButton>
@@ -176,8 +209,11 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                           size="small"
                           onClick={() => onDelete(ticket)}
                           disabled={canDelete ? !canDelete(ticket) : false}
-                          sx={{ color: 'text.secondary' }}
                           aria-label="Delete ticket"
+                          sx={{
+                            color: 'text.secondary',
+                            '&:hover': { color: 'error.main', backgroundColor: 'action.hover' },
+                          }}
                         >
                           <DeleteOutlineOutlinedIcon fontSize="small" />
                         </IconButton>

@@ -1,4 +1,20 @@
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Avatar,
+  Box,
+  Card,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import LineChart from '@/components/analytics/LineChart';
 import DonutChart from '@/components/analytics/DonutChart';
 import BarChart from '@/components/analytics/BarChart';
@@ -6,12 +22,15 @@ import SlaGauge from '@/components/analytics/SlaGauge';
 import InsightCard from '@/components/analytics/InsightCard';
 import DateRangeFilter from '@/components/DateRangeFilter';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
-import { useState } from 'react';
+import { getAverageRatingRequest, type AgentWorkloadEntry } from '@/lib/api';
 
 function AnalyticsPage() {
   const theme = useTheme();
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [csat, setCsat] = useState<{ averageRating: number; totalRatings: number } | null>(null);
+  const [csatLoading, setCsatLoading] = useState(false);
+  const [csatError, setCsatError] = useState<string | null>(null);
 
   const filters = {
     fromDate: fromDate || undefined,
@@ -19,6 +38,25 @@ function AnalyticsPage() {
   };
 
   const { analytics, loading, error } = useTicketAnalytics(filters);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCsatLoading(true);
+    setCsatError(null);
+    getAverageRatingRequest()
+      .then((data) => {
+        if (!cancelled) setCsat(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setCsatError(err instanceof Error ? err.message : 'Failed to load CSAT');
+      })
+      .finally(() => {
+        if (!cancelled) setCsatLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fromDate, toDate]);
 
   if (loading) {
     return (
@@ -45,9 +83,7 @@ function AnalyticsPage() {
           <Typography sx={{ color: 'error.main', fontSize: '14px', fontWeight: 500, mb: 1 }}>
             Could not load analytics
           </Typography>
-          <Typography sx={{ color: 'error.dark', fontSize: '13px' }}>
-            {error || 'No data returned from server'}
-          </Typography>
+          <Typography sx={{ color: 'error.dark', fontSize: '13px' }}>{error || 'No data returned from server'}</Typography>
         </Box>
       </Box>
     );
@@ -77,7 +113,7 @@ function AnalyticsPage() {
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Analytics
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
@@ -96,11 +132,39 @@ function AnalyticsPage() {
       </Box>
 
       <Box sx={{ mb: 4 }}>
-        <div className="stats-grid-4">
-          {analytics.insights.map((insight) => (
-            <InsightCard key={insight.label} insight={insight} />
-          ))}
-        </div>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+            gap: 3,
+          }}
+        >
+          <InsightCard
+            insight={{
+              label: 'SLA compliance',
+              value: `${analytics.slaCompliancePercentage}%`,
+              change: slaCaption,
+              changeUp: analytics.slaCompliancePercentage >= 90,
+            }}
+          />
+          <InsightCard
+            insight={{
+              label: 'Average resolution time',
+              value: analytics.averageResolutionTime,
+              change: 'MTTR across selected period',
+              changeUp: undefined,
+            }}
+          />
+          <InsightCard
+            insight={{
+              label: 'Total tickets',
+              value: String(totalTickets),
+              change: 'Tickets in scope',
+              changeUp: undefined,
+            }}
+          />
+          <CsatCard csat={csat} loading={csatLoading} error={csatError} />
+        </Box>
       </Box>
 
       <Box
@@ -129,6 +193,7 @@ function AnalyticsPage() {
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr 1fr' },
           gap: '24px',
+          mb: 4,
         }}
       >
         <DonutChart
@@ -149,7 +214,176 @@ function AnalyticsPage() {
 
         <BarChart data={analytics.agentWorkload} title="Agent workload" subtitle="Open vs resolved tickets by agent" />
       </Box>
+
+      <AgentLeaderboard data={analytics.agentWorkload} />
     </Box>
+  );
+}
+
+function CsatCard({
+  csat,
+  loading,
+  error,
+}: {
+  csat: { averageRating: number; totalRatings: number } | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  const theme = useTheme();
+  const value = csat ? csat.averageRating.toFixed(1) : '—';
+  const caption = csat ? `From ${csat.totalRatings} rating${csat.totalRatings === 1 ? '' : 's'}` : 'No rating data';
+
+  return (
+    <Card
+      sx={{
+        p: '22px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        height: '100%',
+        boxSizing: 'border-box',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        '&:hover': { transform: 'translateY(-2px)', boxShadow: 4 },
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '13px' }}>
+          Customer satisfaction (CSAT)
+        </Typography>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '10px',
+            backgroundColor: '#DBEAFE',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <TrendingUpIcon sx={{ color: theme.palette.primary.main, width: 20, height: 20 }} />
+        </Box>
+      </Box>
+
+      {loading ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <CircularProgress size={18} sx={{ color: 'primary.main' }} />
+          <Typography sx={{ color: 'text.secondary', fontSize: '13px' }}>Loading CSAT…</Typography>
+        </Box>
+      ) : error ? (
+        <Typography sx={{ color: 'error.main', fontSize: '13px' }}>{error}</Typography>
+      ) : (
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '30px', lineHeight: 1.2 }}>
+            {value}
+            <Typography component="span" sx={{ color: 'text.secondary', fontSize: '16px', fontWeight: 500, ml: 0.5 }}>
+              /5
+            </Typography>
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '12px', display: 'block', mt: '8px' }}>
+            {caption}
+          </Typography>
+        </Box>
+      )}
+    </Card>
+  );
+}
+
+function AgentLeaderboard({ data }: { data: AgentWorkloadEntry[] }) {
+  const theme = useTheme();
+  const sorted = useMemo(() => [...data].sort((a, b) => b.resolved - a.resolved), [data]);
+
+  return (
+    <Paper
+      sx={{
+        borderRadius: '16px',
+        border: `1px solid ${theme.palette.divider}`,
+        bgcolor: 'background.paper',
+        boxShadow: 'none',
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ p: '24px', borderBottom: `1px solid ${theme.palette.divider}` }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '16px' }}>
+          Agent leaderboard
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px', mt: 0.5 }}>
+          Ranked by tickets resolved.
+        </Typography>
+      </Box>
+
+      <TableContainer>
+        <Table stickyHeader sx={{ minWidth: 520 }}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: 'action.hover' }}>
+              {['Rank', 'Agent', 'Open tickets', 'Resolved tickets', 'Total'].map((h) => (
+                <TableCell
+                  key={h}
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    color: 'text.secondary',
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    py: '12px',
+                  }}
+                >
+                  {h}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sorted.map((agent, index) => (
+              <TableRow
+                key={agent.name}
+                hover
+                sx={{
+                  '&:last-child td': { borderBottom: 0 },
+                }}
+              >
+                <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: 80 }}>
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: index < 3 ? 'primary.main' : 'action.hover',
+                      color: index < 3 ? 'primary.contrastText' : 'text.secondary',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                    }}
+                  >
+                    {index + 1}
+                  </Box>
+                </TableCell>
+                <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar sx={{ width: 30, height: 30, fontSize: 12, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+                      {agent.initials}
+                    </Avatar>
+                    <Typography sx={{ fontSize: '14px', fontWeight: 600, color: 'text.primary' }}>{agent.name}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell sx={{ fontSize: '14px', color: 'text.secondary', fontWeight: 600, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  {agent.open}
+                </TableCell>
+                <TableCell sx={{ fontSize: '14px', color: 'success.main', fontWeight: 700, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  {agent.resolved}
+                </TableCell>
+                <TableCell sx={{ fontSize: '14px', color: 'text.primary', fontWeight: 700, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  {agent.open + agent.resolved}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 }
 

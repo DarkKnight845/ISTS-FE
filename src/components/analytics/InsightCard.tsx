@@ -1,4 +1,5 @@
-import { Box, Card, Typography, useTheme } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
+import { TrendUpIcon, TrendDownIcon } from '@/components/icons';
 import type { Insight } from '@/data/mockAnalytics';
 
 interface InsightCardProps {
@@ -6,26 +7,21 @@ interface InsightCardProps {
 }
 
 function InsightCard({ insight }: InsightCardProps) {
-  const theme = useTheme();
+  const hasTrend = typeof insight.changeUp === 'boolean';
   return (
     <Card
       sx={{
-        width: '100%',
-        borderRadius: '16px',
-        border: `1px solid ${theme.palette.divider}`,
-        bgcolor: 'background.paper',
-        boxShadow: 'none',
-        p: '24px',
-        boxSizing: 'border-box',
+        p: '22px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100%',
+        boxSizing: 'border-box',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         cursor: 'default',
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: theme.shadows[2],
+          boxShadow: 4,
         },
       }}
     >
@@ -34,16 +30,31 @@ function InsightCard({ insight }: InsightCardProps) {
       </Typography>
 
       <Box sx={{ mt: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '28px', lineHeight: 1.2 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '30px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           {insight.value}
         </Typography>
 
-        <Typography
-          variant="caption"
-          sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '12px', display: 'block', mt: '8px' }}
-        >
-          {insight.change}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', mt: '8px' }}>
+          {hasTrend && (
+            <>
+              {insight.changeUp ? (
+                <TrendUpIcon size={12} color="success.main" />
+              ) : (
+                <TrendDownIcon size={12} color="error.main" />
+              )}
+            </>
+          )}
+          <Typography
+            variant="caption"
+            sx={{
+              color: hasTrend ? (insight.changeUp ? 'success.main' : 'error.main') : 'text.secondary',
+              fontWeight: 600,
+              fontSize: '12px',
+            }}
+          >
+            {insight.change}
+          </Typography>
+        </Box>
       </Box>
     </Card>
   );

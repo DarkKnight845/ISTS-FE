@@ -152,9 +152,14 @@ function AgentDashboardPage() {
             gap: 2,
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 500, color: 'text.primary' }}>
-            Agent Dashboard
-          </Typography>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              Agent Dashboard
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mt: 0.5, fontSize: '14px' }}>
+              Manage assigned tickets and pick up open requests.
+            </Typography>
+          </Box>
 
           <DateRangeFilter
             start={fromDate}
