@@ -1,11 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, IconButton, Avatar, Chip, Typography, Badge, Menu, MenuItem, CircularProgress } from '@mui/material';
+import {
+  Avatar,
+  Badge,
+  Box,
+  Chip,
+  CircularProgress,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Switch,
+  Typography,
+} from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeMode } from '@/context/ThemeContext';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNotifications } from '@/hooks/useNotifications';
-import { BellIcon, SunIcon, MoonIcon, LogoutIcon } from '@/components/icons';
+import { BellIcon, LogoutIcon, MoonIcon, SunIcon } from '@/components/icons';
 
 interface PageHeaderProps {
   /** Show the department chip (used by staff/manager; hidden for agents). */
@@ -19,7 +33,8 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
   const { mode, toggleMode } = useThemeMode();
   const { notifications, unreadCount, loading, markAsRead } = useNotifications();
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
 
   const initials = user
     ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
@@ -28,11 +43,15 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
   const displayName = user?.fullName || 'Loading…';
   const department = user?.departmentName || 'IT Department';
 
-  const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
+  const handleNotifOpen = (e: React.MouseEvent<HTMLElement>) => setNotifAnchorEl(e.currentTarget);
+  const handleNotifClose = () => setNotifAnchorEl(null);
   const handleMarkRead = async (id: string) => markAsRead(id);
 
+  const handleProfileOpen = (e: React.MouseEvent<HTMLElement>) => setProfileAnchorEl(e.currentTarget);
+  const handleProfileClose = () => setProfileAnchorEl(null);
+
   const handleLogout = () => {
+    setProfileAnchorEl(null);
     logout();
     navigate('/login');
   };
@@ -67,7 +86,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
         )}
 
         <IconButton
-          onClick={handleOpen}
+          onClick={handleNotifOpen}
           sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '10px', color: 'text.secondary' }}
           aria-label="Notifications"
         >
@@ -77,9 +96,9 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
         </IconButton>
 
         <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
+          anchorEl={notifAnchorEl}
+          open={Boolean(notifAnchorEl)}
+          onClose={handleNotifClose}
           slotProps={{
             paper: {
               sx: {
@@ -114,7 +133,7 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
                 key={n.id}
                 onClick={() => {
                   if (!n.isRead) handleMarkRead(n.id);
-                  handleClose();
+                  handleNotifClose();
                 }}
                 sx={{
                   px: 2,
@@ -160,39 +179,13 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
           )}
         </Menu>
 
-        <IconButton
-          onClick={toggleMode}
-          size="small"
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '10px',
-            color: 'text.secondary',
-            '&:hover': { backgroundColor: 'action.hover' },
-          }}
-          title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-          aria-label="Toggle theme"
-        >
-          {mode === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
-        </IconButton>
-
-        <IconButton
-          onClick={handleLogout}
-          size="small"
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '10px',
-            color: 'text.secondary',
-            '&:hover': { backgroundColor: 'action.hover' },
-          }}
-          title="Log out"
-          aria-label="Log out"
-        >
-          <LogoutIcon size={18} />
-        </IconButton>
-
         <Box
+          onClick={handleProfileOpen}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') handleProfileOpen(e as unknown as React.MouseEvent<HTMLElement>);
+          }}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -204,6 +197,10 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
             borderColor: 'divider',
             borderRadius: '24px',
             backgroundColor: 'background.paper',
+            cursor: 'pointer',
+            transition: 'background-color 0.15s ease',
+            '&:hover': { backgroundColor: 'action.hover' },
+            '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
           }}
         >
           <Avatar sx={{ width: 28, height: 28, fontSize: 12, backgroundColor: 'warning.main' }}>
@@ -213,6 +210,78 @@ function PageHeader({ showDepartmentChip = true }: PageHeaderProps) {
             {displayName}
           </Typography>
         </Box>
+
+        <Menu
+          anchorEl={profileAnchorEl}
+          open={Boolean(profileAnchorEl)}
+          onClose={handleProfileClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          slotProps={{
+            paper: {
+              sx: {
+                width: 240,
+                mt: 1,
+                borderRadius: '12px',
+                backgroundColor: 'background.paper',
+              },
+            },
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: 14, color: 'text.primary' }}>
+              {displayName}
+            </Typography>
+            {user?.email && (
+              <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                {user.email}
+              </Typography>
+            )}
+          </Box>
+
+          <Divider />
+
+          <MenuItem
+            onClick={toggleMode}
+            sx={{ py: 1.25, gap: 1.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto', color: 'text.secondary' }}>
+              {mode === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+            </ListItemIcon>
+            <ListItemText
+              slotProps={{ primary: { sx: { fontSize: 14, fontWeight: 500, color: 'text.primary' } } }}
+            >
+              {mode === 'light' ? 'Dark mode' : 'Light mode'}
+            </ListItemText>
+            <Switch
+              size="small"
+              checked={mode === 'dark'}
+              onChange={(e) => {
+                e.stopPropagation();
+                if ((e.target.checked && mode === 'light') || (!e.target.checked && mode === 'dark')) {
+                  toggleMode();
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </MenuItem>
+
+          <Divider />
+
+          <MenuItem
+            onClick={handleLogout}
+            sx={{ py: 1.25, gap: 1.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto', color: 'error.main' }}>
+              <LogoutIcon size={18} />
+            </ListItemIcon>
+            <ListItemText
+              slotProps={{ primary: { sx: { fontSize: 14, fontWeight: 600, color: 'error.main' } } }}
+            >
+              Logout
+            </ListItemText>
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );

@@ -9,14 +9,16 @@ import {
   DialogContentText,
   DialogTitle,
   FormControl,
+  InputBase,
   MenuItem,
+  Paper,
   Select,
   TextField,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PageHeader from '@/components/layout/PageHeader';
-import StatsCardGrid from '@/components/StatsCardGrid';
+import StaffStatsCardGrid from '@/components/StaffStatsCardGrid';
 import TicketFilterBar from '@/components/TicketFilterBar';
 import TicketTable from '@/components/TicketTable';
 import DateRangeFilter from '@/components/DateRangeFilter';
@@ -36,6 +38,13 @@ import {
 type StaffFilter = 'All' | 'Open' | 'Waiting' | 'Resolved';
 
 const STAFF_FILTER_TABS: readonly StaffFilter[] = ['All', 'Open', 'Waiting', 'Resolved'];
+
+const SearchIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
 
 const PRIORITY_OPTIONS: readonly string[] = ['Low', 'Medium', 'High', 'Urgent'];
 
@@ -320,12 +329,11 @@ function StaffDashboardPage() {
         </Box>
 
         <Box sx={{ mb: 5 }}>
-          <StatsCardGrid
-            assignedToMe={stats.submitted}
+          <StaffStatsCardGrid
+            submitted={stats.submitted}
+            ongoing={stats.ongoing}
+            open={stats.open}
             resolved={stats.resolved}
-            unassigned={stats.open}
-            averageRating={null}
-            totalRatings={0}
           />
         </Box>
 
@@ -346,10 +354,31 @@ function StaffDashboardPage() {
             tabs={STAFF_FILTER_TABS}
             activeTab={filter}
             onChange={setFilter}
-            search={search}
-            onSearchChange={setSearch}
+            hideSearch
           />
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            <Paper
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                px: 1.5,
+                py: 0.5,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: '10px',
+                boxShadow: 'none',
+                bgcolor: 'background.paper',
+                minWidth: 240,
+              }}
+            >
+              <SearchIcon />
+              <InputBase
+                placeholder="Search tickets..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                sx={{ ml: 1, fontSize: 14, flex: 1 }}
+              />
+            </Paper>
             <Button
               variant="contained"
               startIcon={<AddIcon />}

@@ -14,6 +14,9 @@ interface TicketFilterBarProps<T extends string> {
   onChange: (tab: T) => void;
   search?: string;
   onSearchChange?: (value: string) => void;
+  /** When true, the embedded search field is hidden. Useful when the parent
+   *  renders the search input elsewhere in the layout. */
+  hideSearch?: boolean;
 }
 
 /**
@@ -27,6 +30,7 @@ function TicketFilterBar<T extends string>({
   onChange,
   search = '',
   onSearchChange,
+  hideSearch = false,
 }: TicketFilterBarProps<T>) {
   const theme = useTheme();
 
@@ -63,29 +67,31 @@ function TicketFilterBar<T extends string>({
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Paper
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            px: 1.5,
-            py: 0.5,
-            border: `1px solid ${theme.palette.divider}`,
-            borderRadius: '10px',
-            boxShadow: 'none',
-            bgcolor: 'background.paper',
-            minWidth: 240,
-          }}
-        >
-          <SearchIcon />
-          <InputBase
-            placeholder="Search tickets..."
-            value={search}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            sx={{ ml: 1, fontSize: 14, flex: 1 }}
-          />
-        </Paper>
-      </Box>
+      {!hideSearch && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Paper
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              px: 1.5,
+              py: 0.5,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: '10px',
+              boxShadow: 'none',
+              bgcolor: 'background.paper',
+              minWidth: 240,
+            }}
+          >
+            <SearchIcon />
+            <InputBase
+              placeholder="Search tickets..."
+              value={search}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              sx={{ ml: 1, fontSize: 14, flex: 1 }}
+            />
+          </Paper>
+        </Box>
+      )}
     </Box>
   );
 }
