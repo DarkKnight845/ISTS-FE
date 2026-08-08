@@ -46,6 +46,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [exists, setExists] = useState(false);
 
   const loadRules = async () => {
@@ -53,6 +54,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     setError(null);
     setSaveError(null);
     setSuccess(null);
+    setInfo(null);
 
     // Bypass any stale in-memory cache for this department's SLA rules.
     invalidateCache(`/api/sla/${departmentId}`);
@@ -84,7 +86,11 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     }
   };
 
+  // Data fetch on mount / department change. loadRules updates internal state
+  // after the async call, which the set-state-in-effect rule flags; disabling
+  // because this is the standard fetch-then-setState pattern used across the app.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRules();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departmentId]);
@@ -96,6 +102,7 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     );
     setSaveError(null);
     setSuccess(null);
+    setInfo(null);
   };
 
   const validationError = useMemo(() => {
@@ -122,41 +129,34 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
     setSaving(true);
     setSaveError(null);
     setSuccess(null);
+    setInfo(null);
 
     const payload = { departmentId, priorities: rules };
 
     try {
-      if (exists) {
+      // Re-check the backend right before saving. The `exists` flag is set from
+      // the initial load, but another user/session may have created rules since
+      // then, or the flag may be stale. A fresh GET lets us pick the correct
+      // method and avoids the 409 Conflict from POSTing over existing rules.
+      const fresh = await getSLAByDepartmentRequest(departmentId);
+      const hasExistingRules = (fresh.slas ?? []).length > 0;
+      setExists(hasExistingRules);
+
+      if (hasExistingRules) {
         await updateSLARequest(payload);
+        setSuccess('SLA rules updated successfully.');
       } else {
         await createSLARequest(payload);
+        setSuccess('SLA rules created successfully.');
       }
-      setSuccess('SLA rules saved successfully.');
+
       // Always reload the saved rules from the backend so the UI reflects what
       // is actually stored (and not stale cache or local state).
       await loadRules();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save SLA rules';
-
-      // If the backend says rules already exist, the UI was in create mode but
-      // the department already has rules. Automatically retry with PATCH so the
-      // user doesn't have to click twice.
-      if (!exists && message.toLowerCase().includes('already exists')) {
-        try {
-          await updateSLARequest(payload);
-          setExists(true);
-          setSuccess('SLA rules updated successfully.');
-          await loadRules();
-        } catch (retryErr) {
-          setSaveError(
-            retryErr instanceof Error
-              ? retryErr.message
-              : 'Failed to update SLA rules after detecting they already exist.'
-          );
-        }
-      } else {
-        setSaveError(message);
-      }
+      const status = (err as Error & { status?: number }).status;
+      setSaveError(`${message}${status ? ` (HTTP ${status})` : ''}`);
     } finally {
       setSaving(false);
     }
@@ -187,6 +187,12 @@ function SLARuleEditor({ departmentId }: SLARuleEditorProps) {
       {success && (
         <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>
           {success}
+        </Alert>
+      )}
+
+      {info && (
+        <Alert severity="info" sx={{ mb: 3, borderRadius: '12px' }}>
+          {info}
         </Alert>
       )}
 

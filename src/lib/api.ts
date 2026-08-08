@@ -206,6 +206,7 @@ export async function apiRequest<T>(
 
   // Strip our custom cache option before passing to fetch so it doesn't clash
   // with the native RequestInit.cache property (RequestCache enum).
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { cache: _cache, ...fetchOptions } = options;
 
   const response = await fetch(url, {
@@ -226,14 +227,14 @@ export async function apiRequest<T>(
       ? wrapped.errors.join("\n")
       : wrapped?.message || `HTTP ${response.status}`;
 
+    const httpError = new Error(errors);
+    (httpError as Error & { status?: number }).status = response.status;
+
     if (response.status === 401) {
       window.dispatchEvent(new Event("ists:auth:expired"));
-      const authError = new Error(errors);
-      (authError as Error & { status?: number }).status = 401;
-      throw authError;
     }
 
-    throw new Error(errors);
+    throw httpError;
   }
 
   // Some endpoints return the payload directly instead of wrapping it.

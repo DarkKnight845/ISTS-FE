@@ -17,7 +17,7 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
     point: WeeklyPoint;
   } | null>(null);
   const width = 600;
-  const height = 220;
+  const height = 170;
   const padding = { top: 30, right: 24, bottom: 40, left: 44 };
 
   const maxValue = Math.max(...data.map((d) => Math.max(d.received, d.resolved)), 1);
