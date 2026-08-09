@@ -122,7 +122,7 @@ function DonutChart({ data, title, subtitle, centerLabel, centerValue }: DonutCh
                   {displayLabel(segment.label)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px' }}>
-                  {segment.value} ({Math.round((segment.value / total) * 100)}%)
+                  {segment.value} ({total > 0 ? Math.round((segment.value / total) * 100) : 0}%)
                 </Typography>
               </Box>
             </Box>
