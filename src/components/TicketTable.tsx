@@ -200,7 +200,7 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                         <IconButton
                           size="small"
                           onClick={() => onEdit(ticket)}
-                          disabled={ticket.status === 'Resolved' || ticket.status === 'Closed'}
+                          disabled={ticket.status !== 'Open'}
                           aria-label="Edit ticket"
                           sx={{
                             color: 'text.secondary',
@@ -214,7 +214,7 @@ function TicketTable({ tickets, onSelect, onEdit, onDelete, canDelete }: TicketT
                         <IconButton
                           size="small"
                           onClick={() => onDelete(ticket)}
-                          disabled={canDelete ? !canDelete(ticket) : false}
+                          disabled={ticket.status !== 'Open' || (canDelete ? !canDelete(ticket) : false)}
                           aria-label="Delete ticket"
                           sx={{
                             color: 'text.secondary',

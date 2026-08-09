@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getTicketsRequest, type TicketResponseDto } from '@/lib/api';
 
 interface UseOpenTicketsResult {
@@ -8,13 +8,17 @@ interface UseOpenTicketsResult {
   refetch: () => void;
 }
 
+const TICKET_POLL_INTERVAL_MS = 5000;
+
 export function useOpenTickets(): UseOpenTicketsResult {
   const [tickets, setTickets] = useState<TicketResponseDto[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTickets = async () => {
-    setLoading(true);
+  const fetchTickets = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await getTicketsRequest({ status: 'Open' });
@@ -23,17 +27,28 @@ export function useOpenTickets(): UseOpenTicketsResult {
       setError(err instanceof Error ? err.message : 'Failed to load open tickets');
       setTickets(null);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchTickets();
-    const interval = setInterval(() => {
-      fetchTickets();
-    }, 10000);
-    return () => clearInterval(interval);
   }, []);
 
-  return { tickets, loading, error, refetch: fetchTickets };
+  useEffect(() => {
+    fetchTickets(false);
+    const interval = setInterval(() => {
+      fetchTickets(true);
+    }, TICKET_POLL_INTERVAL_MS);
+
+    const handleFocus = () => {
+      fetchTickets(true);
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchTickets]);
+
+  return { tickets, loading, error, refetch: () => fetchTickets(false) };
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAverageRatingRequest, type AverageRatingDto } from '@/lib/api';
+import { useTicketSync } from '@/context/TicketSyncContext';
 
 interface UseAverageRatingResult {
   rating: AverageRatingDto | null;
@@ -13,36 +14,44 @@ export function useAverageRating(agentId: string | null): UseAverageRatingResult
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const { subscribe: subscribeToTicketChanges } = useTicketSync();
+
+  const fetchRating = async (cancelledRef: { current: boolean }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getAverageRatingRequest(agentId);
+      if (!cancelledRef.current) {
+        setRating(data);
+      }
+    } catch (err) {
+      if (!cancelledRef.current) {
+        setError(err instanceof Error ? err.message : 'Failed to load rating');
+        setRating(null);
+      }
+    } finally {
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!agentId) return;
 
-    let cancelled = false;
-    const fetchRating = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getAverageRatingRequest(agentId);
-        if (!cancelled) {
-          setRating(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load rating');
-          setRating(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+    const cancelledRef = { current: false };
+    fetchRating(cancelledRef);
 
-    fetchRating();
+    // Refresh the rating when any ticket changes (e.g. a new rating submitted).
+    const unsubscribe = subscribeToTicketChanges(() => {
+      fetchRating(cancelledRef);
+    });
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
+      unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentId, tick]);
 
   if (!agentId) {

@@ -12,6 +12,7 @@ import { type ManagerTicket } from '@/data/mockManagerTickets';
 import { useTickets, type BackendTicket } from '@/hooks/useTickets';
 import { useTicketAnalytics } from '@/hooks/useTicketAnalytics';
 import { getAgentsRequest, assignTicketRequest, getBreachedTicketsRequest, type AgentDto, type TicketResponseDto } from '@/lib/api';
+import { formatTicketDate } from '@/lib/format';
 import { useTicketSync } from '@/context/TicketSyncContext';
 
 function ManagerDashboardPage() {
@@ -370,9 +371,7 @@ function mapBackendTicket(ticket: BackendTicket | TicketResponseDto): ManagerTic
   const createdDate = new Date(ticket.createdAt);
   const updatedDate = ticket.updatedAt ? new Date(ticket.updatedAt) : createdDate;
   const formatDate = (date: Date) =>
-    isNaN(date.getTime())
-      ? ticket.createdAt
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    isNaN(date.getTime()) ? ticket.createdAt : formatTicketDate(date.toISOString());
 
   // Defensive: backend sometimes returns null/empty for createdByName despite
   // the DTO contract. Use an id-derived label instead of a hardcoded "Unknown".

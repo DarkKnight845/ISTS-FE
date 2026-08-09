@@ -29,6 +29,7 @@ import {
   updateTicketStatusRequest,
   type TicketMessageDto,
 } from '@/lib/api';
+import { formatMessageTime as formatMessageTimeUtil } from '@/lib/format';
 import { CloseIcon, MoreIcon, AttachmentIcon, SendIcon } from '@/components/icons';
 import ConfirmDialog from './ui/ConfirmDialog';
 
@@ -43,10 +44,7 @@ interface TicketDetailDrawerProps {
 }
 
 function formatMessageTime(value: string) {
-  const normalized = value.endsWith('Z') || value.endsWith('+00:00') ? value : `${value}Z`;
-  const date = new Date(normalized);
-  if (isNaN(date.getTime())) return value;
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return formatMessageTimeUtil(value);
 }
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
@@ -275,7 +273,6 @@ function TicketDetailDrawer({
       setEscalateDialogOpen(false);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to escalate ticket');
-    } finally {
     }
   };
 
@@ -307,6 +304,7 @@ function TicketDetailDrawer({
       await createRatingRequest({ ticketId: ticket.backendId, rating, comment: ratingComment.trim() });
       setRatingSubmitted(true);
       onTicketUpdated?.({ ...ticket, isRated: true });
+      notifyTicketChanged(ticket.backendId);
       setTimeout(() => setRatingSubmitted(false), 3000);
     } catch (err) {
       setRatingError(err instanceof Error ? err.message : 'Failed to submit rating');

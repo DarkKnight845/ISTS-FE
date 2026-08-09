@@ -36,6 +36,7 @@ import {
   getDepartmentsRequest,
   sendTicketMessageRequest,
 } from '@/lib/api';
+import { formatTicketDate } from '@/lib/format';
 
 type StaffFilter = 'All' | 'Open' | 'Waiting' | 'Resolved';
 
@@ -668,13 +669,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     Closed: 'Closed',
   };
 
-  const formatDate = (value: string | null) => {
-    if (!value) return '—';
-    const date = new Date(value);
-    return isNaN(date.getTime())
-      ? value
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const formatDate = (value: string | null) => formatTicketDate(value);
 
   // Defensive: backend sometimes returns null/empty for createdByName
   // despite the DTO contract. Use an id-derived label instead of a hardcoded

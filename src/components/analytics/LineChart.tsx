@@ -143,23 +143,46 @@ function LineChart({ data, title, subtitle }: LineChartProps) {
             const x = xForIndex(i);
             const yReceived = yForValue(d.received);
             const yResolved = yForValue(d.resolved);
+            const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
             const showTooltip = (e: React.MouseEvent) => {
               const rect = chartRef.current?.getBoundingClientRect();
               if (!rect) return;
+              const tooltipWidth = 150;
+              const tooltipHeight = 70;
+              let x = e.clientX - rect.left + 12;
+              let y = e.clientY - rect.top - 12;
+              // Keep the tooltip inside the chart container so it doesn't overflow
+              // and trigger a scrollbar on the right/bottom edges.
+              if (x + tooltipWidth > rect.width) {
+                x = e.clientX - rect.left - tooltipWidth - 12;
+              }
+              if (y + tooltipHeight > rect.height) {
+                y = rect.height - tooltipHeight - 8;
+              }
               setTooltip({
-                x: e.clientX - rect.left + 12,
-                y: e.clientY - rect.top - 12,
+                x: clamp(x, 8, rect.width - tooltipWidth - 8),
+                y: clamp(y, 8, rect.height - tooltipHeight - 8),
                 point: d,
               });
             };
             const moveTooltip = (e: React.MouseEvent) => {
               const rect = chartRef.current?.getBoundingClientRect();
               if (!rect) return;
+              const tooltipWidth = 150;
+              const tooltipHeight = 70;
+              let x = e.clientX - rect.left + 12;
+              let y = e.clientY - rect.top - 12;
+              if (x + tooltipWidth > rect.width) {
+                x = e.clientX - rect.left - tooltipWidth - 12;
+              }
+              if (y + tooltipHeight > rect.height) {
+                y = rect.height - tooltipHeight - 8;
+              }
               setTooltip((prev) =>
                 prev
                   ? {
-                      x: e.clientX - rect.left + 12,
-                      y: e.clientY - rect.top - 12,
+                      x: clamp(x, 8, rect.width - tooltipWidth - 8),
+                      y: clamp(y, 8, rect.height - tooltipHeight - 8),
                       point: d,
                     }
                   : null

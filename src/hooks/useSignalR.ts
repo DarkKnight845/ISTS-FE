@@ -29,70 +29,114 @@ export function useSignalR(listeners: SignalRListener = {}): UseSignalRResult {
   }, [listeners]);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) return;
+    const buildConnection = () => {
+      // No token yet — tear down any previous connection and wait for login.
+      if (!getToken()) {
+        supportConnectionRef.current = null;
+        notificationConnectionRef.current = null;
+        setConnected(false);
+        return () => {};
+      }
 
-    const supportConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${SIGNALR_BASE_URL}/hubs/support`, {
-        accessTokenFactory: () => token,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Warning)
-      .build();
+      // Read the token fresh every time SignalR needs it (initial connect and
+      // every automatic reconnect). This fixes the "connection expires after the
+      // page has been open for a while" issue caused by a stale closure over the
+      // token captured at mount.
+      const supportConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${SIGNALR_BASE_URL}/hubs/support`, {
+          accessTokenFactory: () => getToken() ?? '',
+        })
+        .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
 
-    const notificationConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${SIGNALR_BASE_URL}/hubs/notifications`, {
-        accessTokenFactory: () => token,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Warning)
-      .build();
+      const notificationConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${SIGNALR_BASE_URL}/hubs/notifications`, {
+          accessTokenFactory: () => getToken() ?? '',
+        })
+        .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
 
-    supportConnectionRef.current = supportConnection;
-    notificationConnectionRef.current = notificationConnection;
+      supportConnectionRef.current = supportConnection;
+      notificationConnectionRef.current = notificationConnection;
 
-    supportConnection.on('ReceiveMessage', (message: TicketMessageDto) => {
-      listenersRef.current.onMessage?.(message);
-    });
-    supportConnection.on('Typing', (payload: { userId: string; userName: string; ticketId: string }) => {
-      listenersRef.current.onTyping?.(payload);
-    });
-    supportConnection.on('ReadReceipt', (payload: { userId: string; ticketId: string }) => {
-      listenersRef.current.onReadReceipt?.(payload);
-    });
+      supportConnection.on('ReceiveMessage', (message: TicketMessageDto) => {
+        listenersRef.current.onMessage?.(message);
+      });
+      supportConnection.on('Typing', (payload: { userId: string; userName: string; ticketId: string }) => {
+        listenersRef.current.onTyping?.(payload);
+      });
+      supportConnection.on('ReadReceipt', (payload: { userId: string; ticketId: string }) => {
+        listenersRef.current.onReadReceipt?.(payload);
+      });
 
-    notificationConnection.on('Notification', (notification: NotificationDto) => {
-      listenersRef.current.onNotification?.(notification);
-    });
+      notificationConnection.on('Notification', (notification: NotificationDto) => {
+        listenersRef.current.onNotification?.(notification);
+      });
 
-    const updateState = () => {
-      const isSupportConnected = supportConnection.state === signalR.HubConnectionState.Connected;
-      const isNotificationConnected = notificationConnection.state === signalR.HubConnectionState.Connected;
-      setConnected(isSupportConnected && isNotificationConnected);
+      const updateState = () => {
+        const isSupportConnected = supportConnection.state === signalR.HubConnectionState.Connected;
+        const isNotificationConnected = notificationConnection.state === signalR.HubConnectionState.Connected;
+        setConnected(isSupportConnected && isNotificationConnected);
+      };
+
+      const startConnections = async () => {
+        try {
+          await Promise.all([supportConnection.start(), notificationConnection.start()]);
+          updateState();
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'SignalR connection failed');
+        }
+      };
+
+      supportConnection.onclose((error) => {
+        updateState();
+        if (error?.message?.includes('401') || error?.message?.includes('auth')) {
+          window.dispatchEvent(new CustomEvent('ists:auth:expired'));
+        }
+      });
+      supportConnection.onreconnecting(() => updateState());
+      supportConnection.onreconnected(() => updateState());
+      notificationConnection.onclose((error) => {
+        updateState();
+        if (error?.message?.includes('401') || error?.message?.includes('auth')) {
+          window.dispatchEvent(new CustomEvent('ists:auth:expired'));
+        }
+      });
+      notificationConnection.onreconnecting(() => updateState());
+      notificationConnection.onreconnected(() => updateState());
+
+      startConnections();
+
+      return () => {
+        supportConnection.stop();
+        notificationConnection.stop();
+      };
     };
 
-    const startConnections = async () => {
-      try {
-        await Promise.all([supportConnection.start(), notificationConnection.start()]);
-        updateState();
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'SignalR connection failed');
+    let cleanup = buildConnection();
+
+    // Rebuild the connection if the stored token changes while the page is open.
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'ists_access_token') {
+        cleanup?.();
+        cleanup = buildConnection();
       }
     };
 
-    supportConnection.onclose(() => updateState());
-    supportConnection.onreconnecting(() => updateState());
-    supportConnection.onreconnected(() => updateState());
-    notificationConnection.onclose(() => updateState());
-    notificationConnection.onreconnecting(() => updateState());
-    notificationConnection.onreconnected(() => updateState());
+    const handleAuthExpired = () => {
+      cleanup?.();
+    };
 
-    startConnections();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('ists:auth:expired', handleAuthExpired);
 
     return () => {
-      supportConnection.stop();
-      notificationConnection.stop();
+      cleanup?.();
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('ists:auth:expired', handleAuthExpired);
     };
   }, []);
 

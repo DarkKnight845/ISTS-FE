@@ -47,7 +47,17 @@ function TicketFilterBar<T extends string>({
         gap: 2,
       }}
     >
-      <Box sx={{ display: 'flex', gap: 1, backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100], borderRadius: '10px', p: 0.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[200],
+          borderRadius: '10px',
+          p: 0.5,
+          border: '1px solid',
+          borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300],
+        }}
+      >
         {tabs.map((tab) => (
           <Button
             key={tab}

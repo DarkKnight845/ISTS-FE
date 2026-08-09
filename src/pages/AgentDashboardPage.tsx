@@ -10,6 +10,7 @@ import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { useOpenTickets } from '@/hooks/useOpenTickets';
 import { useAverageRating } from '@/hooks/useAverageRating';
 import { useSignalR } from '@/hooks/useSignalR';
+import { formatTicketDate } from '@/lib/format';
 import { useAuth } from '@/context/AuthContext';
 import { useTicketDrawer } from '@/context/TicketDrawerContext';
 import type { TicketResponseDto, TicketMessageDto } from '@/lib/api';
@@ -247,11 +248,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     Low: 'Low',
   };
 
-  const formatDate = (value: string | null) => {
-    if (!value) return '—';
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const formatDate = (value: string | null) => formatTicketDate(value);
 
   // Defensive: backend sometimes returns null/empty for createdByName
   // despite the DTO contract. Use an id-derived label instead of "Unknown".

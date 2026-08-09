@@ -6,6 +6,7 @@ import { useTicketSync } from '@/context/TicketSyncContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSignalR } from '@/hooks/useSignalR';
 import { getTicketByIdRequest, type TicketResponseDto } from '@/lib/api';
+import { formatTicketDate } from '@/lib/format';
 import type { Ticket, TicketStatus } from '@/components/ui/types/ticket';
 
 function mapBackendTicket(ticket: TicketResponseDto): Ticket {
@@ -16,13 +17,7 @@ function mapBackendTicket(ticket: TicketResponseDto): Ticket {
     Closed: 'Closed',
   };
 
-  const formatDate = (value: string | null) => {
-    if (!value) return '—';
-    const date = new Date(value);
-    return isNaN(date.getTime())
-      ? value
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const formatDate = (value: string | null) => formatTicketDate(value);
 
   // The DTO types createdByName as non-null, but the wire sometimes returns
   // an empty string or null. Treat both as missing and fall back to a short
