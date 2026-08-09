@@ -198,7 +198,7 @@ function AnalyticsPage() {
           centerValue={String(totalTickets)}
         />
 
-        <BarChart data={analytics.agentWorkload} title="Agent workload" subtitle="Open vs resolved tickets by agent" />
+        <BarChart data={analytics.agentWorkload} title="Agent workload" subtitle="Active vs resolved tickets by agent" />
       </Box>
 
       <AgentLeaderboard data={analytics.agentWorkload} />
@@ -279,6 +279,9 @@ function AgentLeaderboard({ data }: { data: AgentWorkloadEntry[] }) {
   const theme = useTheme();
   const sorted = useMemo(() => [...data].sort((a, b) => b.resolved - a.resolved), [data]);
 
+  const columnTooltip =
+    'Active = Open + Ongoing tickets assigned to this agent. Resolved includes Closed tickets.';
+
   return (
     <Paper
       sx={{
@@ -296,13 +299,16 @@ function AgentLeaderboard({ data }: { data: AgentWorkloadEntry[] }) {
         <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px', mt: 0.5 }}>
           Ranked by tickets resolved.
         </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '12px', mt: 0.5, display: 'block' }}>
+          {columnTooltip}
+        </Typography>
       </Box>
 
       <TableContainer>
         <Table stickyHeader sx={{ minWidth: 520 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: 'action.hover' }}>
-              {['Rank', 'Agent', 'Open tickets', 'Resolved tickets', 'Total'].map((h) => (
+              {['Rank', 'Agent', 'Active tickets', 'Resolved tickets', 'Total'].map((h) => (
                 <TableCell
                   key={h}
                   sx={{
