@@ -36,7 +36,12 @@ function LoginForm() {
         setError("Could not determine user role from token.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+      const message = err instanceof Error ? err.message : "Login failed. Please try again.";
+      // Strip the generic backend message so users see a friendly prompt.
+      const friendlyMessage = message.toLowerCase().includes("unauthorized")
+        ? "Incorrect email or password."
+        : message;
+      setError(friendlyMessage);
     } finally {
       setLoading(false);
     }

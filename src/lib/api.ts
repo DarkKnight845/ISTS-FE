@@ -232,7 +232,7 @@ export async function apiRequest<T>(
     const httpError = new Error(errors);
     (httpError as Error & { status?: number }).status = response.status;
 
-    if (response.status === 401) {
+    if (response.status === 401 && endpoint !== "/api/auth/login") {
       window.dispatchEvent(new Event("ists:auth:expired"));
     }
 
@@ -270,6 +270,16 @@ export async function loginRequest(email: string, password: string) {
   return apiRequest<{ accessToken: string; accessTokenExpiresAt: string }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+    cache: false,
+  }).catch((err) => {
+    const status = (err as { status?: number }).status;
+    if (status === 401) {
+      throw new Error("Incorrect email or password.");
+    }
+    if (status != null && status >= 500) {
+      throw new Error("Something went wrong on our side. Please try again shortly.");
+    }
+    throw err;
   });
 }
 
