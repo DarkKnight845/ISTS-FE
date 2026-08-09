@@ -32,7 +32,7 @@ function BarChart({ data, title, subtitle }: BarChartProps) {
       )}
 
       <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-        <LegendItem color={theme.palette.primary.main} label="Open" />
+        <LegendItem color={theme.palette.primary.main} label="Active" />
         <LegendItem color={theme.palette.success.light} label="Resolved" />
       </Box>
 
